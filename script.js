@@ -63,7 +63,6 @@ function updateProgress() {
     if (!media) {
         return;
     }
-    $('.current-url').text(media.media.contentId);
     $('.progress-bar').attr({
         value: media.getEstimatedTime(),
         max: media.media.duration
@@ -99,5 +98,13 @@ $(document).ready(function() {
     });
 });
 
-var url = 'http://syd1.anacrolix.link/preview?path=The.Last.Circus.2010.720p.BluRay.x264-LPD.mkv&ih=17e0d45e7b30bbba59f61ebad5896268cfa20603&at=MTQ3MzIyODAzMnx0SFo3b0lieGRYM2haZUNieklHSjJ0dFk5SHBza2RLOU9FSXpTcUNhdVBVeWNrU3VaTG9NNkZ3Xy1UR28tOXQxZU1Oa0VpbTljVUpFSkt2bzBudk1KXzQ1UEVYWHIySE1pZUpLQ3B5bFVTcF9DVUdIR29yaVZMYWtIZVV0dnNCSUE2NlJmRjN1MkVvVnFINHZ8TekeZcV78ONqQT7KBsIFk9Cn7kI_AjhXsR_dI6sivfY%3d';
-url = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+var url = window.location.hash.substr(1) || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+$(document).ready(function() {
+    $('.current-url').text(url);
+    $('.progress-bar').on('click', function(e) {
+        var sr = new chrome.cast.media.SeekRequest();
+        sr.currentTime = e.offsetX/e.target.clientWidth*media.media.duration;
+        media.seek(sr, null, onError);
+    });
+})
