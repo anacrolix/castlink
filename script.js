@@ -1,4 +1,6 @@
 var media;
+var session;
+var url = window.location.hash.substr(1) || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
 setInterval(function() {
     updateProgress();
@@ -6,29 +8,30 @@ setInterval(function() {
 
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
     if (loaded) {
-        initializeCastApi();
+        apiAvailable();
     } else {
         console.log(errorInfo);
     }
 }
 
-initializeCastApi = function() {
-  var sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
-  var apiConfig = new chrome.cast.ApiConfig(sessionRequest, onSession, onReceiver);
-  chrome.cast.initialize(apiConfig, initSuccess, onError);
+function apiAvailable() {
+    var sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+    var apiConfig = new chrome.cast.ApiConfig(sessionRequest, gotSession, gotReceiverAvailability, chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED);
+    chrome.cast.initialize(apiConfig, apiInitialized, onError);
 };
 
-function onReceiver(e) {
-    console.log('onReceiver', e);
-    if (e == chrome.cast.ReceiverAvailability.AVAILABLE) {
-        chrome.cast.requestSession(onSession, onError);
+function gotReceiverAvailability(availability) {
+    if (availability == chrome.cast.ReceiverAvailability.AVAILABLE) {
+        showJoin();
+    } else {
+        hideJoin();
     }
 }
 
 function loadMedia(url) {
     for (var i = 0; i < session.media.length; i++) {
         if (session.media[i].media.contentId == url) {
-            onMedia(session.media[i]);
+            mediaLoaded(session.media[i]);
             return
         }
     }
@@ -37,22 +40,94 @@ function loadMedia(url) {
     mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
     mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
     var request = new chrome.cast.media.LoadRequest(mediaInfo);
-    session.loadMedia(request, onMedia, onError);
+    session.loadMedia(request, mediaLoaded, onError);
 }
 
-function onSession(s) {
+function showLeave() {
+    $('.leave').show();
+}
+
+function hideLeave() {
+    $('.leave').hide();
+}
+
+function showJoin() {
+    $('.join').show();
+}
+
+function hideJoin() {
+    $('.join').hide();
+}
+
+function showPlay() {
+    $('.play').show();
+}
+
+function hidePlay() {
+    $('.play').hide();
+}
+
+function showPause() {
+    $('.pause').show();
+}
+
+function hidePause() {
+    $('.pause').hide();
+}
+
+function showStop() {
+    $('.stop').show();
+}
+
+function hideStop() {
+    $('.stop').hide();
+}
+
+function showProgress() {
+    $('.progress').show();
+}
+
+function hideProgress() {
+    $('.progress').hide();
+}
+
+function updateMediaControls() {
+    if (!media) {
+        hidePlay();
+        hidePause();
+        hideStop();
+        hideProgress();
+    }
+}
+
+function gotSession(s) {
+    console.log('got session', s);
     session = s;
-    session.addUpdateListener(onSessionChanged);
-    console.log('onSession', session);
+    session.addUpdateListener(sessionUpdated);
+    applySession(session);
     loadMedia(url);
 }
 
-function onSessionChanged(isAlive) {
-    console.log('onSessionChanged', isAlive, session);
+function sessionUpdated(isAlive) {
+    console.log('session updated', isAlive);
+    applySession();
 }
 
-function initSuccess() {
-    console.log("init succeeded");
+function applySession() {
+    console.log('applying session', session);
+    if (session.status == chrome.cast.SessionStatus.CONNECTED) {
+        showLeave();
+        hideJoin();
+    } else {
+        showJoin();
+        hideLeave();
+        media = null;
+        updateMediaControls();
+    }
+}
+
+function apiInitialized() {
+    console.log('cast api initialized');
 }
 
 function onError(e) {
@@ -61,8 +136,10 @@ function onError(e) {
 
 function updateProgress() {
     if (!media) {
+        hideProgress();
         return;
     }
+    showProgress();
     $('.progress-bar').attr({
         value: media.getEstimatedTime(),
         max: media.media.duration
@@ -71,18 +148,45 @@ function updateProgress() {
     $('.duration').text(media.media.duration);
 }
 
-function onMediaChanged(alive) {
-    console.log('onMediaChanged', alive);
-    updateProgress();
+function mediaUpdated(alive) {
+    console.log('media updated', alive);
+    applyMedia();
 }
 
-function onMedia(m) {
-    console.log('onMedia', m);
+function applyMedia() {
+    updateProgress();
+    switch (media.playerState) {
+    case chrome.cast.media.PlayerState.PLAYING:
+    case chrome.cast.media.PlayerState.BUFFERING:
+        showPause();
+        showStop();
+        hidePlay();
+        break;
+    case chrome.cast.media.PlayerState.PAUSED:
+        showPlay();
+        showStop();
+        hidePause();
+        break;
+    default:
+        showPlay();
+        hideStop();
+        hidePause();
+    }
+}
+
+function mediaLoaded(m) {
+    console.log('media loaded', m);
     media = m;
-    media.addUpdateListener(onMediaChanged);
+    media.addUpdateListener(mediaUpdated);
 }
 
 $(document).ready(function() {
+    $('.current-url').text(url);
+    $('.progress-bar').on('click', function(e) {
+        var sr = new chrome.cast.media.SeekRequest();
+        sr.currentTime = e.offsetX/e.target.clientWidth*media.media.duration;
+        media.seek(sr, null, onError);
+    });
     $('.pause').on('click', function() {
         media.pause(null, null, onError);
     });
@@ -93,15 +197,10 @@ $(document).ready(function() {
     $('.stop').on('click', function() {
         media.stop(null, null, onError);
     });
-});
-
-var url = window.location.hash.substr(1) || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
-$(document).ready(function() {
-    $('.current-url').text(url);
-    $('.progress-bar').on('click', function(e) {
-        var sr = new chrome.cast.media.SeekRequest();
-        sr.currentTime = e.offsetX/e.target.clientWidth*media.media.duration;
-        media.seek(sr, null, onError);
+    $('.leave').on('click', function() {
+        session.leave(null, onError);
+    });
+    $('.join').on('click', function() {
+        chrome.cast.requestSession(gotSession, onError);
     });
 })
