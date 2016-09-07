@@ -83,9 +83,6 @@ function onMedia(m) {
 }
 
 $(document).ready(function() {
-    $('.cast-icon-error').on('click', function() {
-        chrome.cast.requestSession(onSession, onError);
-    });
     $('.pause').on('click', function() {
         media.pause(null, null, onError);
     });
