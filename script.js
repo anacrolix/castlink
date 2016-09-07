@@ -15,7 +15,7 @@ window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
 }
 
 function apiAvailable() {
-    var sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
+    var sessionRequest = new chrome.cast.SessionRequest('911A4C88');
     var apiConfig = new chrome.cast.ApiConfig(sessionRequest, gotSession, gotReceiverAvailability, chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED);
     chrome.cast.initialize(apiConfig, apiInitialized, onError);
 };
