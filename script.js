@@ -1,10 +1,12 @@
-var media;
 var session;
 var url = window.location.hash.substr(1) || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+var subtitles;
+// var subtitle = 'http://syd1.anacrolix.link:33849/out.vtt';
+// var subtitle = 'https://syd1.anacrolix.link/data?ih=17e0d45e7b30bbba59f61ebad5896268cfa20603&path=The.Last.Circus.2010.720p.BluRay.x264-LPD.srt&at=MTQ3MzI2NTMwMHxJN2dmRGlDbl82ZlIySmR1UFVxWmZHTG1GUjFNZWI1TENTVGlNSzI0UkFNaTNnbGk3T05Vd3pabHVFMEdpVHJpb3lwZlV6V3NnSlZiNEpHS2hSNGpLcllkSEM2V3dvdFU3SmNkdU5YQ3pOa0NodTlHOFJ0TDBxemQ4M1RkZWVZdVVPWUw1VGVyQ3VmeHlhZGR8pZbuIgf6HhxmJ8LoD8VQDmQz5QM9bNsg8dgJPA9KpXs%3d';
 
 setInterval(function() {
     updateProgress();
-}, 1000);
+}, 500);
 
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
     if (loaded) {
@@ -35,12 +37,34 @@ function loadMedia(url) {
             return
         }
     }
+    var tracks = [];
+    if (subtitles) {
+        var enSubs = new chrome.cast.media.Track(1, chrome.cast.media.TrackType.TEXT);
+        enSubs.trackContentId = subtitle;
+        enSubs.trackContentType = 'text/vtt';
+        enSubs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
+        enSubs.language = 'en-US';
+        tracks.push(enSubs);
+    }
     var mediaInfo = new chrome.cast.media.MediaInfo(url);
     mediaInfo.contentType = 'video/mp4';
     mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
     mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
+    mediaInfo.tracks = tracks;
+    mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
     var request = new chrome.cast.media.LoadRequest(mediaInfo);
+    if (subtitles) {
+        request.activeTrackIds = [1];
+    }
+    // request.autoplay = false;
     session.loadMedia(request, mediaLoaded, onError);
+}
+
+function displayControl(name, display) {
+    var j = $('.'+name);
+    if (!j.length) throw name;
+    if (display) j.show();
+    else j.hide();
 }
 
 function showLeave() {
@@ -49,6 +73,11 @@ function showLeave() {
 
 function hideLeave() {
     $('.leave').hide();
+}
+
+function displayJoin(display) {
+    if (display) showJoin();
+    else hideJoin();
 }
 
 function showJoin() {
@@ -104,8 +133,8 @@ function gotSession(s) {
     console.log('got session', s);
     session = s;
     session.addUpdateListener(sessionUpdated);
+    session.media.forEach(mediaLoaded);
     applySession(session);
-    loadMedia(url);
 }
 
 function sessionUpdated(isAlive) {
@@ -115,15 +144,7 @@ function sessionUpdated(isAlive) {
 
 function applySession() {
     console.log('applying session', session);
-    if (session.status == chrome.cast.SessionStatus.CONNECTED) {
-        showLeave();
-        hideJoin();
-    } else {
-        showJoin();
-        hideLeave();
-        media = null;
-        updateMediaControls();
-    }
+    updateUI();
 }
 
 function apiInitialized() {
@@ -135,6 +156,7 @@ function onError(e) {
 }
 
 function updateProgress() {
+    var media = activeMedia();
     if (!media) {
         hideProgress();
         return;
@@ -144,58 +166,72 @@ function updateProgress() {
         value: media.getEstimatedTime(),
         max: media.media.duration
     });
-    $('.current-time').text(media.getEstimatedTime());
-    $('.duration').text(media.media.duration);
+    $('.current-time').text(toHHMMSS(media.getEstimatedTime()));
+    $('.duration').text(toHHMMSS(media.media.duration));
 }
 
 function mediaUpdated(alive) {
     console.log('media updated', alive);
-    applyMedia();
+    updateUI();
 }
 
-function applyMedia() {
-    updateProgress();
-    switch (media.playerState) {
-    case chrome.cast.media.PlayerState.PLAYING:
-    case chrome.cast.media.PlayerState.BUFFERING:
-        showPause();
-        showStop();
-        hidePlay();
-        break;
-    case chrome.cast.media.PlayerState.PAUSED:
-        showPlay();
-        showStop();
-        hidePause();
-        break;
-    default:
-        showPlay();
-        hideStop();
-        hidePause();
-    }
+function activeMedia() {
+    return session && session.status == chrome.cast.SessionStatus.CONNECTED && session.media[0];
+}
+
+function updateUI() {
+    var sessionConnected = session && session.status == chrome.cast.SessionStatus.CONNECTED;
+    displayJoin(!sessionConnected);
+    displayControl('leave', sessionConnected);
+    var media = activeMedia();
+    $('.current-url').text(media && media.media.contentId || 'none');
+    displayControl('play', function() {
+        if (!media) return false;
+        switch (media.playerState) {
+        case chrome.cast.media.PlayerState.PLAYING:
+        case chrome.cast.media.PlayerState.BUFFERING:
+            return false;
+        }
+        return true;
+    }());
+    displayControl('pause', function() {
+        if (!media) return false;
+        switch (media.playerState) {
+        case chrome.cast.media.PlayerState.PLAYING:
+        case chrome.cast.media.PlayerState.BUFFERING:
+            break;
+        default:
+            return false;
+        }
+        return true;
+    }());
+    displayControl('stop', function() {
+        return media;
+    }());
 }
 
 function mediaLoaded(m) {
     console.log('media loaded', m);
-    media = m;
-    media.addUpdateListener(mediaUpdated);
+    m.addUpdateListener(mediaUpdated);
+    // var activeTrackIds = [1];
+    // var tracksInfoRequest = new chrome.cast.media.EditTracksInfoRequest(activeTrackIds);
+    // media.editTracksInfo(tracksInfoRequest, null, onError);
 }
 
 $(document).ready(function() {
-    $('.current-url').text(url);
     $('.progress-bar').on('click', function(e) {
         var sr = new chrome.cast.media.SeekRequest();
-        sr.currentTime = e.offsetX/e.target.clientWidth*media.media.duration;
-        media.seek(sr, null, onError);
+        sr.currentTime = e.offsetX/e.target.clientWidth*activeMedia().media.duration;
+        activeMedia().seek(sr, null, onError);
     });
     $('.pause').on('click', function() {
-        media.pause(null, null, onError);
+        activeMedia().pause(null, null, onError);
     });
     $('.play').on('click', function() {
-        loadMedia(url);
-        media.play(null, null, onError);
+        activeMedia().play(null, null, onError);
     });
     $('.stop').on('click', function() {
-        media.stop(null, null, onError);
+        activeMedia().stop(null, null, onError);
     });
     $('.leave').on('click', function() {
         session.leave(null, onError);
@@ -203,4 +239,20 @@ $(document).ready(function() {
     $('.join').on('click', function() {
         chrome.cast.requestSession(gotSession, onError);
     });
+    $('#new-url').attr('value', url);
+    $('.load').on('click', function() {
+        loadMedia($('#new-url').val());
+    });
 })
+
+function toHHMMSS(i) {
+    var sec_num = parseInt(i, 10); // don't forget the second param
+    var hours   = Math.floor(sec_num / 3600);
+    var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+    var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+    if (hours   < 10) {hours   = "0"+hours;}
+    if (minutes < 10) {minutes = "0"+minutes;}
+    if (seconds < 10) {seconds = "0"+seconds;}
+    return hours+':'+minutes+':'+seconds;
+}
