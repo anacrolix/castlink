@@ -1,12 +1,10 @@
 var session;
-
-// https://syd1.anacrolix.link/preview?path=The.Last.Circus.2010.720p.BluRay.x264-LPD.mkv&ih=17e0d45e7b30bbba59f61ebad5896268cfa20603&at=MTQ3MzMyMjcyNXxlZnZKc04zVWt0R1Q0ek4xNlVXNDdfLXlLdFdsVjc5WjhKVXJCbU0zZXhtb0I0cTlhLWhQeVFYSGRmcThZdTktNURIZWZ6UGpHQkhKd1p0QXRqVHFKYXFVSkZaNUxJdGhvV0s0S0M3UGZWQVJjV0trOGxGVnMzNDlILURMMmw2dTQ3dUZhME5Kb1ROMlE5bmV8ESHJ7AW5-MwxFG3fT6h-v1xBTpfOzA3zOWiERur_5Rk%3d
-// http://syd1.anacrolix.link:33849/out.vtt
+var parsedFragment = parseFragment();
+var loading;
 
 setInterval(function() {
     updateProgress();
-    updateUI();
-}, 500);
+}, 1000);
 
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
     if (loaded) {
@@ -43,14 +41,12 @@ function gotReceiverAvailability(availability) {
     }
 }
 
-function loadMedia(url, subtitles, title, poster, subtitle) {
-    for (var i = 0; i < session.media.length; i++) {
-        var m = session.media[i];
-        if (m.media.contentId != url) continue;
-        if ((m.media.tracks[0] && m.media.tracks[0].trackContentId || "") != subtitles) continue;
-        mediaLoaded(session.media[i]);
-        return;
-    }
+function loadMedia(spec) {
+    var url = spec.url;
+    var title = spec.title;
+    var subtitles = spec.subtitles;
+    var subtitle = spec.subtitle;
+    var poster = spec.poster;
     var tracks = [];
     if (subtitles) {
         var enSubs = new chrome.cast.media.Track(1, chrome.cast.media.TrackType.TEXT);
@@ -70,7 +66,7 @@ function loadMedia(url, subtitles, title, poster, subtitle) {
     if (title) {
         metadata.title = unescape(title).substr(0, 35);
     }
-    metadata.subtitle = (subtitle || url).substr(0, 70);
+    metadata.subtitle = (subtitle || url).substr(0, 100);
     mediaInfo.metadata = metadata;
     mediaInfo.tracks = tracks;
     mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
@@ -78,8 +74,14 @@ function loadMedia(url, subtitles, title, poster, subtitle) {
     if (subtitles) {
         request.activeTrackIds = [1];
     }
-    // request.autoplay = false;
-    session.loadMedia(request, mediaLoaded, onError);
+    session.loadMedia(request, mediaLoaded, mediaLoadError);
+    loading = spec;
+    updateUI();
+}
+
+function mediaLoadError(e) {
+    console.log('error loading media', e);
+    loading = null;
 }
 
 function displayControl(sel, display) {
@@ -151,6 +153,9 @@ function gotSession(s) {
     session.media.forEach(function(m) {
         m.addUpdateListener(mediaUpdated);
     });
+    if (!activeMedia()) {
+        loadProposedMedia();
+    }
     updateUI();
 }
 
@@ -173,10 +178,8 @@ function onError(e) {
 function updateProgress() {
     var media = activeMedia();
     if (!media) {
-        hideProgress();
         return;
     }
-    showProgress();
     $('#progress-bar').attr({
         value: media.getEstimatedTime(),
         max: media.media.duration
@@ -199,6 +202,22 @@ function activeMedia() {
     return media;
 }
 
+function proposedContentURL() {
+    return $('#new-url').val();
+}
+
+function proposedSubtitles() {
+    return $('#subtitles').val();
+}
+
+function isProposedMedia(m) {
+    if (!m) return false;
+    var mi = m.media;
+    if (mi.contentId != proposedContentURL()) return false;
+    var ps = proposedSubtitles();
+    return (mi.tracks[0] && mi.tracks[0].trackContentId || "") == (ps || "");
+}
+
 function updateUI() {
     var sessionConnected = session && session.status == chrome.cast.SessionStatus.CONNECTED;
     show('#request-session', !sessionConnected);
@@ -207,7 +226,6 @@ function updateUI() {
     show('#loaded', sessionConnected);
     displayControl('#leave-session', sessionConnected);
     var media = activeMedia();
-    console.log('update ui media', session, media);
     show('#loaded', media);
     if (media) {
         $('#current-url').text(media && media.media.contentId || 'none');
@@ -221,16 +239,17 @@ function updateUI() {
             return true;
         }());
     }
-    show('#load-button', sessionConnected);
+    show('#load-button', sessionConnected && !isProposedMedia(media) && !loading);
+    show('#loading-button', loading);
+    show('#reload-button', sessionConnected && isProposedMedia(media));
+    updateProgress();
 }
 
 function mediaLoaded(m) {
     console.log('media loaded', m);
+    loading = null;
     m.addUpdateListener(mediaUpdated);
     updateUI();
-    // var activeTrackIds = [1];
-    // var tracksInfoRequest = new chrome.cast.media.EditTracksInfoRequest(activeTrackIds);
-    // media.editTracksInfo(tracksInfoRequest, null, onError);
 }
 
 $(document).ready(function() {
@@ -257,22 +276,32 @@ $(document).ready(function() {
     $('#request-session').on('click', function() {
         chrome.cast.requestSession(gotSession, onError);
     });
-    var f = parseFragment();
-    $('#new-url').val(f.getLast('content') || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-    $('#subtitles').val(f.getLast('subtitles'));
+    $('#new-url').val(parsedFragment.getLast('content') || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+    $('#subtitles').val(parsedFragment.getLast('subtitles'));
     $('#load-button').on('click', function() {
-        loadMedia(
-            $('#new-url').val(),
-            $('#subtitles').val(),
-            f.getLast('title'),
-            f.getLast('poster'),
-            f.getLast('subtitle'));
+        loadProposedMedia();
+    });
+    $('#reload-button').on('click', function() {
+        loadProposedMedia();
     });
     $('#proposed textarea').on('click', function() {
         $(this).select();
     });
     updateUI();
-})
+});
+
+function proposedMediaSpec() {
+    return {
+        url: $('#new-url').val(),
+        subtitles: $('#subtitles').val(),
+        title: parsedFragment.getLast('title'),
+        poster: parsedFragment.getLast('poster'),
+        subtitle: parsedFragment.getLast('subtitle')};
+}
+
+function loadProposedMedia() {
+    loadMedia(proposedMediaSpec());
+}
 
 function parseFragment() {
     var ret = new MultiMap;
