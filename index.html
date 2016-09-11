@@ -24,75 +24,80 @@
 	.hidden {
 		display: none;
 	}
-	#proposed textarea {
+	.url {
 		word-break: break-all;
 	}
 </style>
 </head>
 <body>
 	<div class="container">
+		<h1>Link Caster</h1>
+		<div id="init-error-alert" class="alert alert-danger hidden" role="alert">
+			  <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
+		</div>
 		<div class="row">
-			<div id="init-error-alert" class="alert alert-danger hidden" role="alert">
-				  <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
-			</div>
-			<div id="receivers" class="hidden">
-				<h4>Receivers</h4>
-				<div id="available" class="alert alert-success hidden" role="alert">
-					<strong>Available</strong>.
-				</div>
-				<div id="unavailable" class="alert alert-danger hidden" role="alert">
-					<strong>Not available</strong>.
-				</div>
-			</div>
-			<div id="session" class="hidden">
-				<h4 class="card-title">Session</h4>
-				<p>
-					<button id="request-session" type="button" class="btn btn-primary"><i class="fa fa-sign-in"></i> Request</button>
-					<button id="leave-session" type="button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
-					<button id="stop-session" type="button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
-				</p>
-			</div>
-			<div id="loaded" class="hidden">
-				<h4>Currently loaded</h4>
-				<dl>
-					<dt>Content URL</dt>
-					<dd id="current-url"></dd>
-				</dl>
-				<p>
-					<button id="play-button" class="btn btn-success"><i class="fa fa-play"></i> Play</button>
-					<button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
-					<button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
-				</p>
-				<div id="progress">
-					<div id="progress-text">
-						<span class="current-time"></span>
-						<span class="duration"></span>
+			<div class="col-sm-6">
+				<div id="receivers" class="hidden card card-block">
+					<h4>Receivers</h4>
+					<div id="available" class="alert alert-success hidden" role="alert">
+						<strong>Available</strong>.
 					</div>
-					<progress id="progress-bar" class="progress" aria-describedby="progress-text"></progress>
+					<div id="unavailable" class="alert alert-danger hidden" role="alert">
+						<strong>Not available</strong>.
+					</div>
 				</div>
 			</div>
-			<div id="proposed">
-				<h4>Proposed media</h4>
-				<button id="load-button" class="btn btn-primary">
-					<i class="fa fa-plus"></i>
-					Load
-				</button>
-				<button id="loading-button" class="btn btn-info disabled hidden">
-					<i class="fa fa-spinner"></i>
-					Loading...
-				</button>
-				<button id="reload-button" class="btn btn-info hidden">
-					<i class="fa fa-refresh"></i>
-					Reload
-				</button>
-				<div class="form-group">
-					<label for="new-url">Content URL</label>
-					<textarea id="new-url" class="form-control"></textarea>
+			<div class="col-sm-6">
+				<div id="session" class="hidden card card-block">
+					<h4 class="card-title">Session</h4>
+					<p>
+						<button id="request-session" type="button" class="btn btn-primary"><i class="fa fa-sign-in"></i> Request</button>
+						<button id="leave-session" type="button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
+						<button id="stop-session" type="button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
+					</p>
 				</div>
-				<div class="form-group">
-					<label for="subtitles">Subtitles URL</label>
-					<textarea id="subtitles" class="form-control"></textarea>
+			</div>
+		</div>
+		<div id="loaded" class="hidden card card-block">
+			<h4>Currently loaded</h4>
+			<dl>
+				<dt>Content URL</dt>
+				<dd id="current-url" class="url"></dd>
+			</dl>
+			<p>
+				<button id="play-button" class="btn btn-success"><i class="fa fa-play"></i> Play</button>
+				<button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
+				<button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
+			</p>
+			<div id="progress">
+				<div id="progress-text">
+					<span class="current-time"></span>
+					<span class="duration"></span>
 				</div>
+				<progress id="progress-bar" class="progress" aria-describedby="progress-text"></progress>
+			</div>
+		</div>
+		<div id="proposed" class="card card-block">
+			<h4>Proposed media</h4>
+			<button id="load-button" class="btn btn-primary">
+				<i class="fa fa-plus"></i>
+				Load
+			</button>
+			<button id="loading-button" class="btn btn-info disabled hidden">
+				<i class="fa fa-spinner"></i>
+				Loading...
+			</button>
+			<button id="reload-button" class="btn btn-info hidden">
+				<i class="fa fa-refresh"></i>
+				Reload
+			</button>
+			<div class="form-group">
+				<label for="new-url">Content URL</label>
+				<textarea id="new-url" class="form-control url"></textarea>
+			</div>
+			<div class="form-group">
+				<label for="subtitles">Subtitles URL</label>
+				<textarea id="subtitles" class="form-control url"></textarea>
 			</div>
 		</div>
 	</div>
