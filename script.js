@@ -13,7 +13,7 @@ window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
         $(document).ready(function() {
             $('#init-error-info').text(errorInfo+'.');
             $('#init-error-alert').show();
-    });
+        });
     }
 }
 
