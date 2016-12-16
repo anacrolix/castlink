@@ -303,11 +303,15 @@ function loadProposedMedia() {
     loadMedia(proposedMediaSpec());
 }
 
+function urlDecode(str) {
+    return decodeURIComponent(str.replace(/\+/g, ' '));
+}
+
 function parseFragment() {
     var ret = new MultiMap;
     window.location.hash.substr(1).split('&').forEach(function(field) {
         var tuple = field.split('=');
-        ret.add(decodeURIComponent(tuple.shift()), decodeURIComponent(tuple.join('=')));
+        ret.add(urlDecode(tuple.shift()), urlDecode(tuple.join('=')));
     });
     return ret;
 }
