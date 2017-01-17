@@ -2,7 +2,7 @@
 <head>
   <title>Cast Link</title>
   <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css" />
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -15,8 +15,8 @@
   </script>
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
   <script src="script.js"></script>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js" type="text/javascript"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/js/bootstrap.min.js"></script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
   <style>
     .controls > *, .control {
       display: none;
@@ -36,66 +36,59 @@
     .url {
       word-break: break-all;
     }
-    .navbar-nav .nav-item+.nav-item {
-      margin-left: 0;
-    }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <nav class="navbar navbar-dark bg-inverse">
+    <nav class="navbar navbar-inverse bg-inverse navbar-toggleable-md">
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown">
+        <span class="navbar-toggler-icon"></span>
+      </button>
       <a class="navbar-brand" href="/">Link Caster</a>
-      <ul class="navbar-nav nav nav-pills" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" data-toggle="pill" href="#user" role="tab">For Users</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" data-toggle="pill" href="#developer" role="tab">For Developers</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" data-toggle="pill" href="#about" role="tab">About</a>
-        </li>
-      </ul>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link active" data-toggle="pill" href="#user" role="tab">For Users</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#developer" role="tab">For Developers</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="pill" href="#about" role="tab">About</a>
+          </li>
+        </ul>
+      </div>
     </nav>
 
     <div class="tab-content">
       <div class="tab-pane active" id="user" role="tabpanel">
-        <p></p>
-        <div id="init-error-alert" class="alert alert-danger hidden" role="alert">
+        <div id="api-not-available" class="alert alert-warning">
+          API not initialized.
+        </div>
+        <div id="api-init-error-alert" class="alert alert-danger hidden" role="alert">
           <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
         </div>
-        <div class="row">
-          <div class="col-sm-6">
-            <div id="receivers" class="hidden card card-block">
-              <h4>Receivers</h4>
-              <div id="available" class="alert alert-success hidden" role="alert">
-                <strong>Available</strong>.
-              </div>
-              <div id="unavailable" class="alert alert-danger hidden" role="alert">
-                <strong>Not available</strong>.
-              </div>
+        <div id="no-devices-available" class="alert alert-danger">
+          No receiver devices available.
+        </div>
+
+        <div id="session" class="card">
+          <div class="card-block">
+            <h5 class="card-title">Session</h5>
+            <div id="connected" class="alert alert-success">
+              Connected to <strong id="connected-receiver-name"></strong>.
             </div>
-          </div>
-          <div class="col-sm-6">
-            <div id="session" class="hidden card card-block">
-              <h4 class="card-title">Session</h4>
-              <p>
-                <button id="request-session" type="button" class="btn btn-primary"><i class="fa fa-sign-in"></i> Request</button>
-                <button id="leave-session" type="button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
-                <button id="stop-session" type="button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
-              </p>
-            </div>
+            <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
+            <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
+            <button id="stop-session-button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
           </div>
         </div>
-        <div id="loaded" class="hidden card card-block">
-          <h4>Currently loaded</h4>
-          <dl>
-            <dt>Content URL</dt>
-            <dd id="current-url" class="url"></dd>
-          </dl>
+
+        <div id="player" class="card card-block">
+          <h5 class="card-title">Player</h5>
           <p>
-            <button id="play-button" class="btn btn-success"><i class="fa fa-play"></i> Play</button>
+            <button id="play-button" class="btn btn-success" type="button"><i class="fa fa-play"></i> Play</button>
             <button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
             <button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
           </p>
@@ -104,30 +97,62 @@
               <span class="current-time"></span>
               <span class="duration"></span>
             </div>
-            <progress id="progress-bar" class="progress" aria-describedby="progress-text"></progress>
+            <div class="progress">
+              <div id="progress-bar" class="progress-bar"></div>
+            </div>
           </div>
         </div>
-        <div id="proposed" class="card card-block">
-          <h4>Proposed media</h4>
-          <button id="load-button" class="btn btn-primary">
-            <i class="fa fa-plus"></i>
-            Load
-          </button>
-          <button id="loading-button" class="btn btn-info disabled hidden">
-            <i class="fa fa-spinner fa-pulse"></i>
-            Loading...
-          </button>
-          <button id="reload-button" class="btn btn-info hidden">
-            <i class="fa fa-refresh"></i>
-            Reload
-          </button>
-          <div class="form-group">
-            <label for="new-url">Content URL</label>
-            <textarea id="new-url" class="form-control url"></textarea>
+
+        <div id="media" class="card">
+          <div class="card-block">
+            <h5 class="card-title">Media</h5>
+            <button id="loaded-button" class="btn btn-secondary" data-toggle="modal" data-target="#media-form">
+              <i class="fa fa-search"></i>
+              Loaded
+            </button>
+            <button id="proposed-button" class="btn btn-primary" data-toggle="modal" data-target="#media-form">
+              <i class="fa fa-pencil"></i>
+              Proposed
+            </button>
           </div>
-          <div class="form-group">
-            <label for="subtitles">Subtitles URL</label>
-            <textarea id="subtitles" class="form-control url"></textarea>
+
+          <div class="modal fade" id="media-form" tabindex="-1">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Media spec</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" class="form-control title"></input>
+                  </div>
+                  <div class="form-group">
+                    <label>Subtitle</label>
+                    <input type="text" class="form-control subtitle"></input>
+                  </div>
+                  <div class="form-group">
+                    <label for="new-url">Content URL</label>
+                    <textarea class="form-control url content"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="subtitles">Subtitles URL</label>
+                    <textarea class="form-control url subtitles"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="subtitles">Poster URL</label>
+                    <textarea class="form-control url poster"></textarea>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary load" data-dismiss="modal">Load</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
