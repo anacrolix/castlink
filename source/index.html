@@ -3,96 +3,23 @@
 {{ end }}
 
 {{ define "content" }}
-  <div id="api-not-available" class="alert alert-warning">
-    API not initialized.
-  </div>
-  <div id="api-init-error-alert" class="alert alert-danger hidden" role="alert">
-    <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
-  </div>
-  <div id="no-devices-available" class="alert alert-danger">
-    No receiver devices available.
-  </div>
-
-  <div id="session" class="card">
-    <div class="card-block">
-      <h5 class="card-title">Session</h5>
-      <div id="connected" class="alert alert-success">
-        Connected to <strong id="connected-receiver-name"></strong>.
-      </div>
-      <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
-      <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
-      <button id="stop-session-button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
-    </div>
-  </div>
-
-  <div id="player" class="card card-block">
-    <h5 class="card-title">Player</h5>
-    <p>
-      <button id="play-button" class="btn btn-success" type="button"><i class="fa fa-play"></i> Play</button>
-      <button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
-      <button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
-    </p>
-    <div id="progress">
-      <div id="progress-text">
-        <span class="current-time"></span>
-        <span class="duration"></span>
-      </div>
-      <div class="progress">
-        <div id="progress-bar" class="progress-bar"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="media" class="card">
-    <div class="card-block">
-      <h5 class="card-title">Media</h5>
-      <button id="loaded-button" class="btn btn-secondary" data-toggle="modal" data-target="#media-form">
-        <i class="fa fa-search"></i>
-        Loaded
-      </button>
-      <button id="proposed-button" class="btn btn-primary" data-toggle="modal" data-target="#media-form">
-        <i class="fa fa-pencil"></i>
-        Proposed
-      </button>
-    </div>
-
-    <div class="modal fade" id="media-form" tabindex="-1">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">Media spec</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label>Title</label>
-              <input type="text" class="form-control title"></input>
-            </div>
-            <div class="form-group">
-              <label>Subtitle</label>
-              <input type="text" class="form-control subtitle"></input>
-            </div>
-            <div class="form-group">
-              <label for="new-url">Content URL</label>
-              <textarea class="form-control url content"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="subtitles">Subtitles URL</label>
-              <textarea class="form-control url subtitles"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="subtitles">Poster URL</label>
-              <textarea class="form-control url poster"></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary load" data-dismiss="modal">Load</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  {{ template "session" . }}
+  <p>
+    <button id="loading-button" class="btn btn-info">
+      <i class="fa fa-spinner fa-pulse"></i>
+      Loading
+    </button>
+    <button id="load-button" class="btn btn-primary">
+      <i class="fa fa-plus"></i>
+      Load into player
+    </button>
+    <button id="copy-button" class="btn btn-secondary">
+      <i class="fa fa-copy"></i>
+      Show what's loaded
+    </button>
+    <button id="example-button" class="btn btn-secondary">
+      Set example
+    </button>
+  </p>
+  {{ template "media-forms" . }}
 {{ end }}

@@ -111,7 +111,7 @@ function loadMedia(spec) {
     if (title) {
         metadata.title = unescape(title).substr(0, 35);
     }
-    metadata.subtitle = (subtitle || url).substr(0, 100);
+    metadata.subtitle = subtitle || url;
     mediaInfo.metadata = metadata;
     // mediaInfo.tracks = tracks;
     // mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
@@ -127,6 +127,7 @@ function loadMedia(spec) {
 
 function mediaLoaded() {
     console.log('media loaded');
+    window.location.href = '/player/';
 }
 
 function mediaLoadError(e) {
@@ -197,8 +198,13 @@ function updateUI() {
     console.log('updating ui');
     show('#no-devices-available', context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context().getCastState() == cf.CastState.CONNECTED);
+    show('#not-connected', context().getCastState() != cf.CastState.CONNECTED);
     $('#connected-receiver-name').text(session() && session().getCastDevice().friendlyName);
-    show('#request-session-button', _in(context().getSessionState(), cf.SessionState.NO_SESSION, cf.SessionState.SESSION_ENDED));
+    show('#request-session-button', _in(context().getSessionState(),
+        cf.SessionState.NO_SESSION,
+        cf.SessionState.SESSION_ENDED,
+        cf.SessionState.SESSION_START_FAILED
+    ));
     show('#leave-session-button', _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
     show('#stop-session-button', _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
     var m = media();
@@ -206,13 +212,18 @@ function updateUI() {
     var ps = m && m.playerState;
     console.log(ps);
     show('#pause-button', ps && _in(ps, 'PLAYING', 'BUFFERING'));
-    show('#play-button', ps && !_in(ps, 'PLAYING', 'IDLE'));
+    show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
     // show('#loading-button', loading);
     show('#player', rp.isMediaLoaded);
     show('#loaded-button', rp.isMediaLoaded);
-    $1('#media-form .load').prop('disabled', !session());
+    show('#load-button', session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url);
+    show('#copy-button', rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()));
+    show('#progress', rp.isMediaLoaded);
     updateProgress();
+    show('#no-media-loaded', !rp.isMediaLoaded);
+    show('#loading-button', rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
+    show('#player-controls', rp.isMediaLoaded);
 }
 
 function setClickHandlers() {
@@ -248,55 +259,62 @@ function setClickHandlers() {
     $1('#proposed textarea').on('click', function() {
         $(this).select();
     });
-    $1('#media-form .load').on('click', function() {
+    $1('#load-button').on('click', function() {
         loadMedia(getMediaSpecFromForm());
     });
+    $1('#copy-button').on('click', function() {
+        setMediaFormFromSpec(loadedMediaSpec());
+        updateUI();
+    });
+    $('#example-button').click(function() {
+        setMediaFormFromSpec(exampleMediaSpec());
+    });
+    $('button.seek-backward').click(function(event) {
+        rp.currentTime -= $(event.target).data('seconds');
+        rpc.seek();
+    })
+    $('button.seek-forward').click(function(event) {
+        rp.currentTime += $(event.target).data('seconds');
+        rpc.seek();
+    })
 }
 
 $(document).ready(function() {
     setClickHandlers();
-    $('#media-form').on('show.bs.modal', function(event) {
-        var id = event.relatedTarget.id;
-        console.log(id);
-        switch (id) {
-        case 'proposed-button':
-            setMediaFormFromSpec(proposedMediaSpec());
-            break;
-        case 'loaded-button':
-            setMediaFormFromSpec(loadedMediaSpec());
-            break
-        default:
-            throw(id);
-        }
+    $('#media-forms').on("input",function() {
+        updateUI();
     });
+    setMediaFormFromSpec(mediaSpecFromFragment());
 });
 
 function setMediaFormFromSpec(spec) {
     console.log(spec);
-    $1('#media-form .content.url').val(spec.url);
-    $1('#media-form .subtitles.url').val(spec.subtitles);
-    $1('#media-form .title').val(spec.title);
-    $1('#media-form .poster').val(spec.poster);
-    $1('#media-form .subtitle').val(spec.subtitle);
+    $1('#media-content').val(spec.url);
+    $1('#media-subtitles').val(spec.subtitles);
+    $1('#media-title').val(spec.title);
+    $1('#media-poster').val(spec.poster);
+    $1('#media-subtitle').val(spec.subtitle);
+    updateUI();
 }
 
 function getMediaSpecFromForm() {
     return {
-        url: $('#media-form .content').val(),
-        subtitles: $('#media-form .subtitles').val(),
-        title: $('#media-form .title').val(),
-        poster: $('#media-form .poster').val(),
-        subtitle: $('#media-form .subtitle').val()
+        url: $1('#media-content').val() || null,
+        subtitles: $1('#media-subtitles').val() || null,
+        title: $1('#media-title').val() || null,
+        poster: $1('#media-poster').val() || null,
+        subtitle: $1('#media-subtitle').val() || null
     };
 }
 
-function proposedMediaSpec() {
+function mediaSpecFromFragment() {
     return {
-        url: parsedFragment.getLast('content') || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        url: parsedFragment.getLast('content'),
         subtitles: parsedFragment.getLast('subtitles'),
         title: parsedFragment.getLast('title'),
         poster: parsedFragment.getLast('poster'),
-        subtitle: parsedFragment.getLast('subtitle')};
+        subtitle: parsedFragment.getLast('subtitle')
+    };
 }
 
 function loadProposedMedia() {
@@ -360,13 +378,31 @@ var $plus = $1;
 
 function loadedMediaSpec() {
     var m = media();
-    var mi = m.media;
-    var md = mi.metadata;
+    var mi = m && m.media;
+    var md = mi && mi.metadata;
     return {
-        url: mi.contentId,
-        subtitles: mi.tracks && mi.tracks[0].trackContentId,
-        poster: md.images && md.images[0].url,
-        title: md.title,
-        subtitle: md.subtitle
+        url: mi && mi.contentId,
+        subtitles: mi && mi.tracks && mi.tracks[0].trackContentId,
+        poster: md && md.images && md.images[0].url,
+        title: md && md.title,
+        subtitle: md && md.subtitle
+    };
+}
+
+function mediaSpecsEqual(a, b) {
+    return (
+        a.url       == b.url &&
+        a.subtitles == b.subtitles &&
+        a.poster    == b.poster &&
+        a.title     == b.title &&
+        a.subtitle  == b.subtitle);
+}
+
+function exampleMediaSpec() {
+    return {
+        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        subtitle: '1280x720 h264',
+        title: 'Big Buck Bunny',
+        poster: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg'
     };
 }

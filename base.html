@@ -15,8 +15,7 @@
 <body>
   <div class="container">
     {{ template "navbar" }}
-  </div>
-  <div id="content" class="container">
+    <p></p>
     {{ template "content" }}
   </div>
   {{ template "ad" }}
@@ -45,13 +44,16 @@
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link {{ block "index-nav-class" . }}{{ end }}" href="/">For Users</a>
+          <a class="nav-link {{ block "index-nav-class" . }}{{ end }}" href="/">Configure</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">For Developers</a>
+          <a class="nav-link {{ block "player-nav-classes" . }}{{ end }}" href="/player/">Player</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ block "about-nav-class" . }}{{ end }}" href="/about/">About</a>
+          <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">Devs read this</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ block "about-nav-class" . }}{{ end }}" href="/about/">Wat</a>
         </li>
       </ul>
     </div>
@@ -59,26 +61,11 @@
 {{ end }}
 
 {{ define "css" }}
-  .controls > *, .control {
-    display: none;
-  }
-  .load {
-    display: initial;
-  }
-  .current-url {
-    overflow-wrap: break-word;
-  }
   .duration {
     float: right;
   }
-  .hidden {
+  .initially-hidden {
     display: none;
-  }
-  .url {
-    word-break: break-all;
-  }
-  #content > .alert {
-    margin-bottom: 0;
   }
 {{ end }}
 
@@ -92,4 +79,99 @@
     ga('create', 'UA-7566778-13', 'auto');
     ga('send', 'pageview');
   </script>
+{{ end }}
+
+{{ define "session" }}
+  <div id="api-not-available" class="alert alert-warning">
+    API not initialized.
+  </div>
+  <div id="api-init-error-alert" class="alert alert-danger initially-hidden" role="alert">
+    <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
+  </div>
+  <div id="no-devices-available" class="alert alert-danger">
+    No receiver devices available.
+  </div>
+  <div id="connected" class="alert alert-success">
+    <p>Connected to <strong id="connected-receiver-name"></strong>.</p>
+    <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
+    <button id="stop-session-button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
+  </div>
+
+  <div id="not-connected" class="alert alert-warning">
+    <p>Not connected to a device.</p>
+    <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
+  </div>
+{{ end }}
+
+{{ define "player-card" }}
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Player</h5>
+      {{ template "player" . }}
+    </div>
+  </div>
+{{ end }}
+
+{{ define "media-forms" }}
+  <div id="media-forms">
+    <div class="form-group">
+      <label>Title</label>
+      <input id="media-title" type="text" class="form-control title"></input>
+    </div>
+    <div class="form-group">
+      <label>Subtitle</label>
+      <input id="media-subtitle" type="text" class="form-control subtitle"></input>
+    </div>
+    <div class="form-group">
+      <label for="new-url">Content URL</label>
+      <textarea id="media-content" class="form-control url content"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="subtitles">Subtitles URL</label>
+      <textarea id="media-subtitles" class="form-control url subtitles"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="subtitles">Poster URL</label>
+      <textarea id="media-poster" class="form-control url poster"></textarea>
+    </div>
+  </div>
+{{ end }}
+
+{{ define "player" }}
+  {{ template "session" . }}
+  <div id="no-media-loaded" class="alert alert-warning">
+    <p>No media loaded.</p>
+    <a class="btn btn-primary" href="/">Specify media</a>
+  </div>
+  <div id="player-controls">
+    <p>
+      <button id="restart-button" class="btn btn-secondary">
+        <i class="fa fa-fast-backward"></i>
+        Restart
+      </button>
+      <button class="btn btn-secondary seek-backward" data-seconds=30>
+        <i class="fa fa-backward"></i>
+        -30s
+      </button>
+      <button id="play-button" class="btn btn-success" type="button"><i class="fa fa-play"></i> Play</button>
+      <button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
+      <button class="btn btn-secondary seek-forward" data-seconds=30>
+        <i class="fa fa-forward"></i>
+        +30s
+      </button>
+      <button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
+    </p>
+
+    <div id="progress" class="card">
+      <div class="card-block">
+      <div id="progress-text">
+        <span class="current-time"></span>
+        <span class="duration"></span>
+      </div>
+      <div class="progress">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      </div>
+    </div>
+  </div>
 {{ end }}
