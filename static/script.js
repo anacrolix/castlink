@@ -371,7 +371,7 @@ function loadedMediaSpec() {
     var md = mi && mi.metadata;
     return {
         url: mi && mi.contentId,
-        subtitles: mi && mi.tracks && mi.tracks[0].trackContentId,
+        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId,
         poster: md && md.images && md.images[0].url,
         title: md && md.title,
         subtitle: md && md.subtitle
