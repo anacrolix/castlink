@@ -184,14 +184,6 @@ function proposedSubtitles() {
     return $('#subtitles').val();
 }
 
-function isProposedMedia(m) {
-    if (!m) return false;
-    var mi = m.media;
-    if (mi.contentId != proposedContentURL()) return false;
-    var ps = proposedSubtitles();
-    return (mi.tracks[0] && mi.tracks[0].trackContentId || "") == (ps || "");
-}
-
 function updateUI() {
     console.log('updating ui');
     show('#no-devices-available', context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
