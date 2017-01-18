@@ -1,0 +1,95 @@
+<html>
+<head>
+  <title>Cast Link</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
+  {{ template "analytics" }}
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script src="/script.js"></script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+  <style>
+    {{ template "css" }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    {{ template "navbar" }}
+  </div>
+  <div id="content" class="container">
+    {{ template "content" }}
+  </div>
+  {{ template "ad" }}
+</body>
+</html>
+
+{{ define "ad" }}
+  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <!-- castlink responsive -->
+  <ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-5195063250458873"
+     data-ad-slot="4804343597"
+     data-ad-format="auto"></ins>
+  <script>
+  (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+{{ end }}
+
+{{ define "navbar" }}
+  <nav class="navbar navbar-inverse bg-inverse navbar-toggleable-md">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="/">Link Caster</a>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link {{ block "index-nav-class" . }}{{ end }}" href="/">For Users</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">For Developers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ block "about-nav-class" . }}{{ end }}" href="/about/">About</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+{{ end }}
+
+{{ define "css" }}
+  .controls > *, .control {
+    display: none;
+  }
+  .load {
+    display: initial;
+  }
+  .current-url {
+    overflow-wrap: break-word;
+  }
+  .duration {
+    float: right;
+  }
+  .hidden {
+    display: none;
+  }
+  .url {
+    word-break: break-all;
+  }
+  #content > .alert {
+    margin-bottom: 0;
+  }
+{{ end }}
+
+{{ define "analytics" }}
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-7566778-13', 'auto');
+    ga('send', 'pageview');
+  </script>
+{{ end }}
