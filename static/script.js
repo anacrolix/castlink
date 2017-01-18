@@ -92,33 +92,32 @@ function loadMedia(spec) {
     var title = spec.title;
     var subtitle = spec.subtitle;
     var poster = spec.poster;
-    // var tracks = [];
-    // if (subtitles) {
-    //     var enSubs = new chrome.cast.media.Track(1, chrome.cast.media.TrackType.TEXT);
-    //     enSubs.trackContentId = subtitles;
-    //     enSubs.trackContentType = 'text/vtt';
-    //     enSubs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
-    //     enSubs.language = 'en-US';
-    //     tracks.push(enSubs);
-    // }
+    var tracks = [];
+    if (spec.subtitles) {
+        var enSubs = new chrome.cast.media.Track(1, chrome.cast.media.TrackType.TEXT);
+        enSubs.trackContentId = spec.subtitles;
+        enSubs.trackContentType = 'text/vtt';
+        enSubs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
+        enSubs.language = 'en-US';
+        tracks.push(enSubs);
+    }
     var mediaInfo = new chrome.cast.media.MediaInfo(url, 'video/mp4');
-    // mediaInfo.contentType = 'video/mp4';
     var metadata = new chrome.cast.media.GenericMediaMetadata();
     if (poster) {
         metadata.images = [new chrome.cast.Image(poster)];
     }
     metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
     if (title) {
-        metadata.title = unescape(title).substr(0, 35);
+        metadata.title = title;
     }
     metadata.subtitle = subtitle || url;
     mediaInfo.metadata = metadata;
-    // mediaInfo.tracks = tracks;
-    // mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
+    mediaInfo.tracks = tracks;
+    mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
     var request = new chrome.cast.media.LoadRequest(mediaInfo);
-    // if (subtitles) {
-    //     request.activeTrackIds = [1];
-    // }
+    if (spec.subtitles) {
+        request.activeTrackIds = [1];
+    }
     request.autoplay = true;
     console.log(session(), request);
     session().loadMedia(request).then(mediaLoaded, mediaLoadError);
@@ -127,7 +126,6 @@ function loadMedia(spec) {
 
 function mediaLoaded() {
     console.log('media loaded');
-    window.location.href = '/player/';
 }
 
 function mediaLoadError(e) {
@@ -210,15 +208,12 @@ function updateUI() {
     var m = media();
     var ss = session() && session().getSessionState();
     var ps = m && m.playerState;
-    console.log(ps);
     show('#pause-button', ps && _in(ps, 'PLAYING', 'BUFFERING'));
     show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
     // show('#loading-button', loading);
-    show('#player', rp.isMediaLoaded);
-    show('#loaded-button', rp.isMediaLoaded);
-    show('#load-button', session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url);
-    show('#copy-button', rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()));
+    $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
+    $1('#copy-button').prop('disabled', !(rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
     show('#progress', rp.isMediaLoaded);
     updateProgress();
     show('#no-media-loaded', !rp.isMediaLoaded);
@@ -227,10 +222,9 @@ function updateUI() {
 }
 
 function setClickHandlers() {
-    $1('#progress-bar').on('click', function(e) {
-        var sr = new chrome.cast.media.SeekRequest();
-        sr.currentTime = e.offsetX/e.target.clientWidth*activeMedia().media.duration;
-        activeMedia().seek(sr, null, onError);
+    $1('#progress div.progress').on('click', function(e) {
+        rp.currentTime = e.offsetX/e.currentTarget.clientWidth*rp.duration;
+        rpc.seek();
     });
     $1('#pause-button').on('click', function() {
         // rpc.playOrPause();
@@ -277,6 +271,9 @@ function setClickHandlers() {
         rp.currentTime += $(event.target).data('seconds');
         rpc.seek();
     })
+    $1('#set-link').click(function() {
+        window.history.pushState(null, "", linkFromMediaSpec(getMediaSpecFromForm()));
+    });
 }
 
 $(document).ready(function() {
@@ -396,6 +393,20 @@ function mediaSpecsEqual(a, b) {
         a.poster    == b.poster &&
         a.title     == b.title &&
         a.subtitle  == b.subtitle);
+}
+
+function linkFromMediaSpec(spec) {
+    var pairs = [];
+    for (var k in spec) {
+        if (!spec.hasOwnProperty(k)) continue;
+        var v = spec[k];
+        if (!v) continue;
+        pairs.push(encodeURIComponent(k)+'='+encodeURIComponent(v));
+    }
+    var f = pairs.join('&');
+    var ret = '/';
+    if (f) ret += '#' + f;
+    return ret;
 }
 
 function exampleMediaSpec() {

@@ -15,7 +15,6 @@
 <body>
   <div class="container">
     {{ template "navbar" }}
-    <p></p>
     {{ template "content" }}
   </div>
   {{ template "ad" }}
@@ -43,12 +42,6 @@
     <a class="navbar-brand" href="/">Link Caster</a>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link {{ block "index-nav-class" . }}{{ end }}" href="/">Configure</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link {{ block "player-nav-classes" . }}{{ end }}" href="/player/">Player</a>
-        </li>
         <li class="nav-item">
           <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">Devs read this</a>
         </li>
@@ -79,6 +72,15 @@
     ga('create', 'UA-7566778-13', 'auto');
     ga('send', 'pageview');
   </script>
+{{ end }}
+
+{{ define "session-card" }}
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Session</h5>
+      {{ template "session" . }}
+    </div>
+  </div>
 {{ end }}
 
 {{ define "session" }}
@@ -112,6 +114,35 @@
   </div>
 {{ end }}
 
+{{ define "media-card" }}
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Media</h5>
+      <p>
+        <button id="loading-button" class="btn btn-info">
+          <i class="fa fa-spinner fa-pulse"></i>
+          Loading
+        </button>
+        <button id="load-button" class="btn btn-primary">
+          <i class="fa fa-plus"></i>
+          Load into player
+        </button>
+        <button id="copy-button" class="btn btn-secondary">
+          <i class="fa fa-copy"></i>
+          Copy loaded
+        </button>
+        <button id="example-button" class="btn btn-secondary">
+          Set example
+        </button>
+        <button id="set-link" class="btn btn-secondary">
+          Set link
+        </button>
+      </p>
+      {{ template "media-forms" . }}
+    </div>
+  </div>
+{{ end }}
+
 {{ define "media-forms" }}
   <div id="media-forms">
     <div class="form-group">
@@ -138,10 +169,8 @@
 {{ end }}
 
 {{ define "player" }}
-  {{ template "session" . }}
   <div id="no-media-loaded" class="alert alert-warning">
-    <p>No media loaded.</p>
-    <a class="btn btn-primary" href="/">Specify media</a>
+    No media loaded.
   </div>
   <div id="player-controls">
     <p>
