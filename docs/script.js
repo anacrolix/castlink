@@ -206,7 +206,6 @@ function updateUI() {
     show('#pause-button', ps && _in(ps, 'PLAYING', 'BUFFERING'));
     show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
-    // show('#loading-button', loading);
     $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
     $1('#copy-button').prop('disabled', !(rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
     show('#progress', rp.isMediaLoaded);

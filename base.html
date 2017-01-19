@@ -13,8 +13,8 @@
   <div class="container-fluid">
     {{ template "navbar" }}
     {{ template "content" }}
+    {{ template "ad" }}
   </div>
-  {{ template "ad" }}
 </body>
 </html>
 
@@ -119,15 +119,15 @@
     <div class="card-block">
       <h5 class="card-title">Media</h5>
       <p>
-        <button id="loading-button" class="btn btn-info">
+        <button id="loading-button" class="btn btn-info initially-hidden">
           <i class="fa fa-spinner fa-pulse"></i>
           Loading
         </button>
-        <button id="load-button" class="btn btn-primary">
+        <button id="load-button" class="btn btn-primary" disabled>
           <i class="fa fa-upload"></i>
           Load into player
         </button>
-        <button id="copy-button" class="btn btn-secondary">
+        <button id="copy-button" class="btn btn-secondary" disabled>
           <i class="fa fa-download"></i>
           Copy loaded
         </button>
