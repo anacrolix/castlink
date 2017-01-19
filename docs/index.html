@@ -1,0 +1,219 @@
+<html>
+<head>
+  <title>Cast Link</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
+  
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-7566778-13', 'auto');
+    ga('send', 'pageview');
+  </script>
+
+  
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+  <script src="/script.js"></script>
+
+  <style>
+    
+  .duration {
+    float: right;
+  }
+  .initially-hidden {
+    display: none;
+  }
+
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    
+  <nav class="navbar navbar-inverse bg-inverse navbar-toggleable-md">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="/">chromecast.link</a>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link 
+  active
+" href="/">Link Caster</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="/about/">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link " href="/dev/">Use it on your website</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+    
+  
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Session</h5>
+      
+  <div id="api-not-available" class="alert alert-warning">
+    API not initialized.
+  </div>
+  <div id="api-init-error-alert" class="alert alert-danger initially-hidden" role="alert">
+    <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
+  </div>
+  <div id="no-devices-available" class="alert alert-danger">
+    No receiver devices available.
+  </div>
+  <div id="connected" class="alert alert-success">
+    <p>Connected to <strong id="connected-receiver-name"></strong>.</p>
+    <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
+    <button id="stop-session-button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
+  </div>
+
+  <div id="not-connected" class="alert alert-warning">
+    <p>Not connected to a device.</p>
+    <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
+  </div>
+
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Player</h5>
+      
+  <div id="no-media-loaded" class="alert alert-warning">
+    No media loaded.
+  </div>
+  <div id="player-controls">
+    <p>
+      <button id="restart-button" class="btn btn-secondary">
+        <i class="fa fa-fast-backward"></i>
+        Restart
+      </button>
+      <button class="btn btn-secondary seek-backward" data-seconds=30>
+        <i class="fa fa-backward"></i>
+        -30s
+      </button>
+      <button id="play-button" class="btn btn-success" type="button"><i class="fa fa-play"></i> Play</button>
+      <button id="pause-button" class="btn btn-warning"><i class="fa fa-pause"></i> Pause</button>
+      <button class="btn btn-secondary seek-forward" data-seconds=30>
+        <i class="fa fa-forward"></i>
+        +30s
+      </button>
+      <button id="stop-button" class="btn btn-danger"><i class="fa fa-stop"></i> Stop</button>
+    </p>
+
+    <div id="progress" class="card">
+      <div class="card-block">
+      <div id="progress-text">
+        <span class="current-time"></span>
+        <span class="duration"></span>
+      </div>
+      <div class="progress">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-block">
+      <h5 class="card-title">Media</h5>
+      <p>
+        <button id="loading-button" class="btn btn-info">
+          <i class="fa fa-spinner fa-pulse"></i>
+          Loading
+        </button>
+        <button id="load-button" class="btn btn-primary">
+          <i class="fa fa-upload"></i>
+          Load into player
+        </button>
+        <button id="copy-button" class="btn btn-secondary">
+          <i class="fa fa-download"></i>
+          Copy loaded
+        </button>
+        <button id="example-button" class="btn btn-secondary">
+          <i class="fa fa-repeat"></i>
+          Set example
+        </button>
+        <button id="set-link" class="btn btn-secondary">
+          <i class="fa fa-link"></i>
+          Set link
+        </button>
+      </p>
+      
+  <div id="media-forms">
+    <div class="form-group">
+      <label>Title</label>
+      <input id="media-title" type="text" class="form-control title"></input>
+    </div>
+    <div class="form-group">
+      <label>Subtitle</label>
+      <input id="media-subtitle" type="text" class="form-control subtitle"></input>
+    </div>
+    <div class="form-group">
+      <label for="new-url">Content URL</label>
+      <textarea id="media-content" class="form-control url content"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="subtitles">Subtitles URL</label>
+      <textarea id="media-subtitles" class="form-control url subtitles"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="subtitles">Poster URL</label>
+      <textarea id="media-poster" class="form-control url poster"></textarea>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+
+  </div>
+  
+  <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  
+  <ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-5195063250458873"
+     data-ad-slot="4804343597"
+     data-ad-format="auto"></ins>
+  <script>
+  (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
