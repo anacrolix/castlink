@@ -4,16 +4,13 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
   {{ template "analytics" }}
-  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-  <script src="/script.js"></script>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+  {{ block "scripts" . }}{{ end }}
   <style>
     {{ template "css" }}
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container-fluid">
     {{ template "navbar" }}
     {{ template "content" }}
   </div>
@@ -39,14 +36,17 @@
     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <a class="navbar-brand" href="/">Link Caster</a>
+    <a class="navbar-brand" href="/">chromecast.link</a>
     <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">Devs read this</a>
+          <a class="nav-link {{ block "index-nav-classes" . }}{{ end }}" href="/">Link Caster</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {{ block "about-nav-class" . }}{{ end }}" href="/about/">Wat</a>
+          <a class="nav-link {{ block "about-nav-class" . }}{{ end }}" href="/about/">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ block "dev-nav-class" . }}{{ end }}" href="/dev/">Use it on your website</a>
         </li>
       </ul>
     </div>

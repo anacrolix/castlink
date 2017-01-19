@@ -186,6 +186,9 @@ function proposedSubtitles() {
 
 function updateUI() {
     console.log('updating ui');
+    if (!cf) {
+        return;
+    }
     show('#no-devices-available', context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context().getCastState() == cf.CastState.CONNECTED);
     show('#not-connected', context().getCastState() != cf.CastState.CONNECTED);
@@ -211,6 +214,10 @@ function updateUI() {
     show('#no-media-loaded', !rp.isMediaLoaded);
     show('#loading-button', rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
     show('#player-controls', rp.isMediaLoaded);
+    $('textarea').each(function() {
+        $(this).height(1);
+        $(this).height(this.scrollHeight);
+    });
 }
 
 function setClickHandlers() {
