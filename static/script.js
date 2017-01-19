@@ -4,28 +4,32 @@ var cf;
 var rp;
 var rpc;
 
-setInterval(function() {
-    updateProgress();
-}, 1000);
-
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
-    show('#api-not-available', false);
+    console.log('__onGCastApiAvailable', loaded, errorInfo);
+    $(document).ready(function() {
+        $1('#api-not-available').hide();
+    });
     if (loaded) {
-        apiAvailable();
+        onAPIAvailable();
     } else {
         $(document).ready(function() {
-            $('#init-error-info').text(errorInfo+'.');
-            $('#init-error-alert').show();
+            $1('#api-init-error-info').text(errorInfo+'.');
+            $1('#api-init-error').show();
         });
     }
+    $(document).ready(updateUI());
+}
+
+function apiReady() {
+    return cf;
 }
 
 function context() {
-    return cast.framework.CastContext.getInstance();
+    return cf && cast.framework.CastContext.getInstance();
 }
 
 function session() {
-    return context().getCurrentSession();
+    return context() && context().getCurrentSession();
 }
 
 function media() {
@@ -33,7 +37,7 @@ function media() {
     return s && s.getMediaSession();
 }
 
-function apiAvailable() {
+function onAPIAvailable() {
     cf = cast.framework;
     context().setOptions({
         receiverApplicationId: receiverApplicationId,
@@ -176,30 +180,19 @@ function activeMedia() {
     return media();
 }
 
-function proposedContentURL() {
-    return $('#new-url').val();
-}
-
-function proposedSubtitles() {
-    return $('#subtitles').val();
-}
-
 function updateUI() {
     console.log('updating ui');
-    if (!cf) {
-        return;
-    }
-    show('#no-devices-available', context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
-    show('#connected', context().getCastState() == cf.CastState.CONNECTED);
-    show('#not-connected', context().getCastState() != cf.CastState.CONNECTED);
+    show('#no-devices-available', context() && context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
+    show('#connected', context() && context().getCastState() == cf.CastState.CONNECTED);
+    show('#not-connected', !context() || context().getCastState() != cf.CastState.CONNECTED);
     $('#connected-receiver-name').text(session() && session().getCastDevice().friendlyName);
-    show('#request-session-button', _in(context().getSessionState(),
+    $1('#request-session-button').prop('disabled', !(context() && _in(context().getSessionState(),
         cf.SessionState.NO_SESSION,
         cf.SessionState.SESSION_ENDED,
         cf.SessionState.SESSION_START_FAILED
-    ));
-    show('#leave-session-button', _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
-    show('#stop-session-button', _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
+    )));
+    show('#leave-session-button', apiReady() && _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
+    show('#stop-session-button', apiReady() && _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
     var m = media();
     var ss = session() && session().getSessionState();
     var ps = m && m.playerState;
@@ -207,12 +200,12 @@ function updateUI() {
     show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
     $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
-    $1('#copy-button').prop('disabled', !(rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
-    show('#progress', rp.isMediaLoaded);
+    $1('#copy-button').prop('disabled', !(apiReady() && rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
+    show('#progress', apiReady() && rp.isMediaLoaded);
     updateProgress();
-    show('#no-media-loaded', !rp.isMediaLoaded);
-    show('#loading-button', rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
-    show('#player-controls', rp.isMediaLoaded);
+    show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
+    show('#loading-button', apiReady() && rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
+    show('#player-controls', apiReady() && rp.isMediaLoaded);
     $('textarea').each(function() {
         $(this).height(1);
         $(this).height(this.scrollHeight);
@@ -246,11 +239,6 @@ function setClickHandlers() {
     $1('#request-session-button').on('click', function() {
         context().requestSession().then(gotSession, onError);
     });
-    $1('#new-url').val();
-    $1('#subtitles').val(parsedFragment.getLast('subtitles'));
-    $1('#proposed textarea').on('click', function() {
-        $(this).select();
-    });
     $1('#load-button').on('click', function() {
         loadMedia(getMediaSpecFromForm());
     });
@@ -283,7 +271,7 @@ $(document).ready(function() {
 });
 
 function setMediaFormFromSpec(spec) {
-    console.log(spec);
+    console.log('setting media form from spec', spec);
     $1('#media-content').val(spec.url);
     $1('#media-subtitles').val(spec.subtitles);
     $1('#media-title').val(spec.title);

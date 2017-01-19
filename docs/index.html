@@ -16,9 +16,9 @@
 
   
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
   <script src="/script.js"></script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
 
   <style>
     
@@ -34,7 +34,7 @@
 <body>
   <div class="container-fluid">
     
-  <nav class="navbar navbar-inverse bg-inverse navbar-toggleable-md">
+  <nav class="navbar navbar-inverse bg-inverse navbar-toggleable-sm">
     <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -56,18 +56,21 @@
     </div>
   </nav>
 
+    <p></p>
     
   
-  <div class="card">
+  <div id="api-not-available" class="alert alert-warning">
+    API not available.
+  </div>
+  <div id="api-init-error" class="alert alert-danger initially-hidden" role="alert">
+    <strong id="api-init-error-info"></strong> You may need to use Chrome, or an Android device.
+  </div>
+
+  
+  <div id="session" class="card">
     <div class="card-block">
       <h5 class="card-title">Session</h5>
       
-  <div id="api-not-available" class="alert alert-warning">
-    API not initialized.
-  </div>
-  <div id="api-init-error-alert" class="alert alert-danger initially-hidden" role="alert">
-    <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
-  </div>
   <div id="no-devices-available" class="alert alert-danger">
     No receiver devices available.
   </div>
@@ -86,7 +89,7 @@
   </div>
 
   
-  <div class="card">
+  <div id="player" class="card">
     <div class="card-block">
       <h5 class="card-title">Player</h5>
       
@@ -182,6 +185,7 @@
   </div>
 
 
+    <p></p>
     
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
@@ -197,6 +201,8 @@
   </div>
 </body>
 </html>
+
+
 
 
 

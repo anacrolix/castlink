@@ -77,7 +77,7 @@
 {{ end }}
 
 {{ define "session-card" }}
-  <div class="card">
+  <div id="session" class="card">
     <div class="card-block">
       <h5 class="card-title">Session</h5>
       {{ template "session" . }}
@@ -86,12 +86,6 @@
 {{ end }}
 
 {{ define "session" }}
-  <div id="api-not-available" class="alert alert-warning">
-    API not initialized.
-  </div>
-  <div id="api-init-error-alert" class="alert alert-danger initially-hidden" role="alert">
-    <strong id="init-error-info"></strong> You may need to use Chrome, or an Android device.
-  </div>
   <div id="no-devices-available" class="alert alert-danger">
     No receiver devices available.
   </div>
@@ -108,7 +102,7 @@
 {{ end }}
 
 {{ define "player-card" }}
-  <div class="card">
+  <div id="player" class="card">
     <div class="card-block">
       <h5 class="card-title">Player</h5>
       {{ template "player" . }}
@@ -206,5 +200,14 @@
       </div>
       </div>
     </div>
+  </div>
+{{ end }}
+
+{{ define "context-alerts" }}
+  <div id="api-not-available" class="alert alert-warning">
+    API not available.
+  </div>
+  <div id="api-init-error" class="alert alert-danger initially-hidden" role="alert">
+    <strong id="api-init-error-info"></strong> You may need to use Chrome, or an Android device.
   </div>
 {{ end }}
