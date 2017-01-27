@@ -184,7 +184,7 @@ function updateUI() {
     console.log('updating ui');
     show('#no-devices-available', context() && context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context() && context().getCastState() == cf.CastState.CONNECTED);
-    show('#not-connected', !context() || context().getCastState() != cf.CastState.CONNECTED);
+    show('#not-connected', !context() || context().getCastState() == cf.CastState.NOT_CONNECTED);
     $('#connected-receiver-name').text(session() && session().getCastDevice().friendlyName);
     $1('#request-session-button').prop('disabled', !(context() && _in(context().getSessionState(),
         cf.SessionState.NO_SESSION,

@@ -86,16 +86,15 @@
 {{ end }}
 
 {{ define "session" }}
-  <div id="no-devices-available" class="alert alert-danger">
-    No receiver devices available.
+  <div id="no-devices-available" class="alert alert-danger initially-hidden">
+    <strong>No receiver devices available.</strong> There appears to be no Chromecasts on your network. They may be switched off, or on a different network.
   </div>
-  <div id="connected" class="alert alert-success">
+  <div id="connected" class="alert alert-success initially-hidden">
     <p>Connected to <strong id="connected-receiver-name"></strong>.</p>
     <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
     <button id="stop-session-button" class="btn btn-danger"><i class="fa fa-trash"></i> Stop</button>
   </div>
-
-  <div id="not-connected" class="alert alert-warning">
+  <div id="not-connected" class="alert alert-warning initially-hidden">
     <p>Not connected to a device.</p>
     <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
   </div>
@@ -168,7 +167,7 @@
 
 {{ define "player" }}
   <div id="no-media-loaded" class="alert alert-warning">
-    No media loaded.
+    <strong>No media loaded.</strong> Configure media below, and load it into the player.
   </div>
   <div id="player-controls">
     <p>
