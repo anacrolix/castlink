@@ -208,7 +208,7 @@ function updateUI() {
     show('#player-controls', apiReady() && rp.isMediaLoaded);
     $('textarea').each(function() {
         $(this).height(1);
-        $(this).height(this.scrollHeight);
+        $(this).height(this.scrollHeight-($(this).innerHeight()-$(this).height()));
     });
 }
 
