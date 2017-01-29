@@ -205,7 +205,7 @@ function updateUI() {
     updateProgress();
     show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
     show('#loading-button', apiReady() && rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
-    show('#player-controls', apiReady() && rp.isMediaLoaded);
+    show('#player-controls', apiReady() && rp.isMediaLoaded && rp.isConnected);
     $('textarea').each(function() {
         $(this).height(1);
         $(this).height(this.scrollHeight-($(this).innerHeight()-$(this).height()));
