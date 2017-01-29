@@ -205,7 +205,7 @@ function updateUI() {
     updateProgress();
     show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
     show('#loading-button', apiReady() && rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
-    show('#player-controls', apiReady() && rp.isMediaLoaded);
+    show('#player-controls', apiReady() && rp.isMediaLoaded && rp.isConnected);
     $('textarea').each(function() {
         $(this).height(1);
         $(this).height(this.scrollHeight-($(this).innerHeight()-$(this).height()));
@@ -232,9 +232,11 @@ function setClickHandlers() {
     });
     $1('#leave-session-button').on('click', function() {
         context().endCurrentSession(false);
+        // session().getSessionObj().leave(function() {}, onError);
     });
     $1('#stop-session-button').on('click', function() {
         context().endCurrentSession(true);
+        // session().getSessionObj().stop(function() {}, onError);
     });
     $1('#request-session-button').on('click', function() {
         context().requestSession().then(gotSession, onError);
