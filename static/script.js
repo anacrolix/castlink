@@ -232,9 +232,11 @@ function setClickHandlers() {
     });
     $1('#leave-session-button').on('click', function() {
         context().endCurrentSession(false);
+        // session().getSessionObj().leave(function() {}, onError);
     });
     $1('#stop-session-button').on('click', function() {
         context().endCurrentSession(true);
+        // session().getSessionObj().stop(function() {}, onError);
     });
     $1('#request-session-button').on('click', function() {
         context().requestSession().then(gotSession, onError);
