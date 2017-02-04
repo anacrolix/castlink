@@ -129,30 +129,34 @@
     <div class="card-block">
       <h5 class="card-title">Media</h5>
       <p>
-        <button id="loading-button" class="btn btn-info initially-hidden">
-          <i class="fa fa-spinner fa-pulse"></i>
-          Loading
-        </button>
-        <button id="load-button" class="btn btn-primary" disabled>
-          <i class="fa fa-upload"></i>
-          Load into player
-        </button>
-        <button id="copy-button" class="btn btn-secondary" disabled>
-          <i class="fa fa-download"></i>
-          Copy loaded
-        </button>
-        <button id="example-button" class="btn btn-secondary">
-          <i class="fa fa-repeat"></i>
-          Set example
-        </button>
-        <button id="set-link" class="btn btn-secondary">
-          <i class="fa fa-link"></i>
-          Set link
-        </button>
+        {{ template "media-buttons" . }}
       </p>
       {{ template "media-forms" . }}
     </div>
   </div>
+{{ end }}
+
+{{ define "media-buttons" }}
+  <button id="loading-button" class="btn btn-info initially-hidden">
+    <i class="fa fa-spinner fa-pulse"></i>
+    Loading
+  </button>
+  <button id="load-button" class="btn btn-primary" disabled>
+    <i class="fa fa-upload"></i>
+    Load into player
+  </button>
+  <button id="copy-button" class="btn btn-secondary" disabled>
+    <i class="fa fa-download"></i>
+    Copy loaded
+  </button>
+  <button id="example-button" class="btn btn-secondary">
+    <i class="fa fa-repeat"></i>
+    Set example
+  </button>
+  <button id="set-link" class="btn btn-secondary">
+    <i class="fa fa-link"></i>
+    Set link
+  </button>
 {{ end }}
 
 {{ define "media-forms" }}
