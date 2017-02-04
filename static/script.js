@@ -210,6 +210,7 @@ function updateUI() {
     $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
     show('#load-button', !loading);
     $1('#copy-button').prop('disabled', !(apiReady() && rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
+    $1('#example-button').prop('disabled', !(apiReady() && !mediaSpecsEqual(getMediaSpecFromForm(), exampleMediaSpec())));
     show('#progress', apiReady() && rp.isMediaLoaded);
     updateProgress();
     show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
@@ -259,6 +260,7 @@ function setClickHandlers() {
     });
     $('#example-button').click(function() {
         setMediaFormFromSpec(exampleMediaSpec());
+        updateUI();
     });
     $('button.seek-backward').click(function(event) {
         rp.currentTime -= $(event.target).data('seconds');
@@ -376,7 +378,7 @@ function loadedMediaSpec() {
     var md = mi && mi.metadata;
     return {
         url: mi && mi.contentId,
-        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId,
+        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId || null,
         poster: md && md.images && md.images[0].url,
         title: md && md.title,
         subtitle: md && md.subtitle
