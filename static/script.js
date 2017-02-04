@@ -222,6 +222,22 @@ function updateUI() {
     });
 }
 
+function stopSession() {
+    context().endCurrentSession(true);
+    // session().getSessionObj().stop(function() {}, onError);
+}
+
+function stopMedia() {
+    activeMedia().stop(null, null, onError);
+    // media().stop();
+    // rpc.stop();
+}
+
+function leaveSession() {
+    context().endCurrentSession(false);
+    // session().getSessionObj().leave(function() {}, onError);
+}
+
 function setClickHandlers() {
     $1('#progress div.progress').on('click', function(e) {
         rp.currentTime = e.offsetX/e.currentTarget.clientWidth*rp.duration;
@@ -236,17 +252,16 @@ function setClickHandlers() {
         activeMedia().play(null, null, onError);
     });
     $1('#stop-button').on('click', function() {
-        // activeMedia().stop(null, null, onError);
-        // media().stop();
-        rpc.stop();
+        // There's a bug where not ending the session makes the remote player
+        // not work for the next loaded media.
+        stopSession();
+        // stopMedia();
     });
     $1('#leave-session-button').on('click', function() {
-        context().endCurrentSession(false);
-        // session().getSessionObj().leave(function() {}, onError);
+        leaveSession();
     });
     $1('#stop-session-button').on('click', function() {
-        context().endCurrentSession(true);
-        // session().getSessionObj().stop(function() {}, onError);
+        stopSession();
     });
     $1('#request-session-button').on('click', function() {
         context().requestSession().then(gotSession, onError);
