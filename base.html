@@ -15,10 +15,25 @@
     <p></p>
     {{ template "content" }}
     <p></p>
+    {{ template "footer" }}
     {{ template "ad" }}
   </div>
 </body>
 </html>
+
+{{ define "footer" }}
+  <div id="footer">
+    <div class="container text-center">
+      <p class="text-muted small">
+        <a class="text-muted" href="mailto:anacrolix@gmail.com">
+          Questions, suggestions, support:
+          <span class="small glyphicon glyphicon-envelope"></span>
+          anacrolix@gmail.com
+        </a>
+      </p>
+    </div>
+  </div>
+{{ end }}
 
 {{ define "ad" }}
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
