@@ -3,6 +3,7 @@ var receiverApplicationId = '911A4C88';
 var cf;
 var rp;
 var rpc;
+var loading = false;
 
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
     console.log('__onGCastApiAvailable', loaded, errorInfo);
@@ -124,17 +125,21 @@ function loadMedia(spec) {
     }
     request.autoplay = true;
     console.log(session(), request);
+    loading = true;
     session().loadMedia(request).then(mediaLoaded, mediaLoadError);
     updateUI();
 }
 
 function mediaLoaded() {
     console.log('media loaded');
+    loading = false;
+    updateUI();
 }
 
 function mediaLoadError(e) {
     console.log('error loading media', e);
-    loading = null;
+    loading = false;
+    updateUI();
 }
 
 function displayControl(sel, display) {
@@ -200,11 +205,12 @@ function updateUI() {
     show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
     $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
+    show('#load-button', !loading);
     $1('#copy-button').prop('disabled', !(apiReady() && rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
     show('#progress', apiReady() && rp.isMediaLoaded);
     updateProgress();
     show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
-    show('#loading-button', apiReady() && rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
+    show('#loading-button', loading);
     show('#player-controls', apiReady() && rp.isMediaLoaded && rp.isConnected);
     $('textarea').each(function() {
         $(this).height(1);
