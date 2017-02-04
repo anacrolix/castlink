@@ -3,6 +3,7 @@ var receiverApplicationId = '911A4C88';
 var cf;
 var rp;
 var rpc;
+var loading = false;
 
 window['__onGCastApiAvailable'] = function(loaded, errorInfo) {
     console.log('__onGCastApiAvailable', loaded, errorInfo);
@@ -124,17 +125,21 @@ function loadMedia(spec) {
     }
     request.autoplay = true;
     console.log(session(), request);
+    loading = true;
     session().loadMedia(request).then(mediaLoaded, mediaLoadError);
     updateUI();
 }
 
 function mediaLoaded() {
     console.log('media loaded');
+    loading = false;
+    updateUI();
 }
 
 function mediaLoadError(e) {
     console.log('error loading media', e);
-    loading = null;
+    loading = false;
+    updateUI();
 }
 
 function displayControl(sel, display) {
@@ -182,6 +187,9 @@ function activeMedia() {
 
 function updateUI() {
     console.log('updating ui');
+    show('#connecting', context() && context().getCastState() == cf.CastState.CONNECTING);
+    show('#session', apiReady());
+    show('#player', apiReady());
     show('#no-devices-available', context() && context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context() && context().getCastState() == cf.CastState.CONNECTED);
     show('#not-connected', !context() || context().getCastState() == cf.CastState.NOT_CONNECTED);
@@ -200,16 +208,34 @@ function updateUI() {
     show('#play-button', ps && _in(ps, 'PAUSED'));
     show('#stop-button', ps && ps != 'IDLE');
     $1('#load-button').prop('disabled', !(session() && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm()) && getMediaSpecFromForm().url));
+    show('#load-button', !loading);
     $1('#copy-button').prop('disabled', !(apiReady() && rp.isMediaLoaded && !mediaSpecsEqual(loadedMediaSpec(), getMediaSpecFromForm())));
+    $1('#example-button').prop('disabled', !(apiReady() && !mediaSpecsEqual(getMediaSpecFromForm(), exampleMediaSpec())));
     show('#progress', apiReady() && rp.isMediaLoaded);
     updateProgress();
     show('#no-media-loaded', !apiReady() || !rp.isMediaLoaded);
-    show('#loading-button', apiReady() && rp.playerState == chrome.cast.media.PlayerState.BUFFERING);
+    show('#loading-button', loading);
     show('#player-controls', apiReady() && rp.isMediaLoaded && rp.isConnected);
     $('textarea').each(function() {
         $(this).height(1);
         $(this).height(this.scrollHeight-($(this).innerHeight()-$(this).height()));
     });
+}
+
+function stopSession() {
+    context().endCurrentSession(true);
+    // session().getSessionObj().stop(function() {}, onError);
+}
+
+function stopMedia() {
+    activeMedia().stop(null, null, onError);
+    // media().stop();
+    // rpc.stop();
+}
+
+function leaveSession() {
+    context().endCurrentSession(false);
+    // session().getSessionObj().leave(function() {}, onError);
 }
 
 function setClickHandlers() {
@@ -226,17 +252,16 @@ function setClickHandlers() {
         activeMedia().play(null, null, onError);
     });
     $1('#stop-button').on('click', function() {
-        // activeMedia().stop(null, null, onError);
-        // media().stop();
-        rpc.stop();
+        // There's a bug where not ending the session makes the remote player
+        // not work for the next loaded media.
+        stopSession();
+        // stopMedia();
     });
     $1('#leave-session-button').on('click', function() {
-        context().endCurrentSession(false);
-        // session().getSessionObj().leave(function() {}, onError);
+        leaveSession();
     });
     $1('#stop-session-button').on('click', function() {
-        context().endCurrentSession(true);
-        // session().getSessionObj().stop(function() {}, onError);
+        stopSession();
     });
     $1('#request-session-button').on('click', function() {
         context().requestSession().then(gotSession, onError);
@@ -250,6 +275,7 @@ function setClickHandlers() {
     });
     $('#example-button').click(function() {
         setMediaFormFromSpec(exampleMediaSpec());
+        updateUI();
     });
     $('button.seek-backward').click(function(event) {
         rp.currentTime -= $(event.target).data('seconds');
@@ -367,7 +393,7 @@ function loadedMediaSpec() {
     var md = mi && mi.metadata;
     return {
         url: mi && mi.contentId,
-        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId,
+        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId || null,
         poster: md && md.images && md.images[0].url,
         title: md && md.title,
         subtitle: md && md.subtitle

@@ -61,7 +61,7 @@
     
   
   <div id="api-not-available" class="alert alert-warning">
-    API not available.
+    <strong>API not loaded.</strong> Session and player functions not yet available.
   </div>
   <div id="api-init-error" class="alert alert-danger initially-hidden" role="alert">
     <strong id="api-init-error-info"></strong> You may need to use Chrome, or an Android device.
@@ -74,6 +74,9 @@
       
   <div id="no-devices-available" class="alert alert-danger initially-hidden">
     <strong>No receiver devices available.</strong> There appears to be no Chromecasts on your network. They may be switched off, or on a different network.
+  </div>
+  <div id="connecting" class="alert alert-info initially-hidden">
+    Connecting
   </div>
   <div id="connected" class="alert alert-success initially-hidden">
     <p>Connected to <strong id="connected-receiver-name"></strong>.</p>
@@ -136,26 +139,28 @@
     <div class="card-block">
       <h5 class="card-title">Media</h5>
       <p>
-        <button id="loading-button" class="btn btn-info initially-hidden">
-          <i class="fa fa-spinner fa-pulse"></i>
-          Loading
-        </button>
-        <button id="load-button" class="btn btn-primary" disabled>
-          <i class="fa fa-upload"></i>
-          Load into player
-        </button>
-        <button id="copy-button" class="btn btn-secondary" disabled>
-          <i class="fa fa-download"></i>
-          Copy loaded
-        </button>
-        <button id="example-button" class="btn btn-secondary">
-          <i class="fa fa-repeat"></i>
-          Set example
-        </button>
-        <button id="set-link" class="btn btn-secondary">
-          <i class="fa fa-link"></i>
-          Set link
-        </button>
+        
+  <button id="loading-button" class="btn btn-info initially-hidden">
+    <i class="fa fa-spinner fa-pulse"></i>
+    Loading
+  </button>
+  <button id="load-button" class="btn btn-primary" disabled>
+    <i class="fa fa-upload"></i>
+    Load into player
+  </button>
+  <button id="copy-button" class="btn btn-secondary" disabled>
+    <i class="fa fa-download"></i>
+    Copy loaded
+  </button>
+  <button id="example-button" class="btn btn-secondary">
+    <i class="fa fa-repeat"></i>
+    Set example
+  </button>
+  <button id="set-link" class="btn btn-secondary">
+    <i class="fa fa-link"></i>
+    Set link
+  </button>
+
       </p>
       
   <div id="media-forms">
@@ -187,6 +192,19 @@
 
     <p></p>
     
+  <div id="footer">
+    <div class="container text-center">
+      <p class="text-muted small">
+        <a class="text-muted" href="mailto:anacrolix@gmail.com">
+          Questions, suggestions, support:
+          <span class="small glyphicon glyphicon-envelope"></span>
+          anacrolix@gmail.com
+        </a>
+      </p>
+    </div>
+  </div>
+
+    
   <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   
   <ins class="adsbygoogle"
@@ -201,6 +219,10 @@
   </div>
 </body>
 </html>
+
+
+
+
 
 
 
