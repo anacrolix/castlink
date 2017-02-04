@@ -188,6 +188,8 @@ function activeMedia() {
 function updateUI() {
     console.log('updating ui');
     show('#connecting', context() && context().getCastState() == cf.CastState.CONNECTING);
+    show('#session', apiReady());
+    show('#player', apiReady());
     show('#no-devices-available', context() && context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context() && context().getCastState() == cf.CastState.CONNECTED);
     show('#not-connected', !context() || context().getCastState() == cf.CastState.NOT_CONNECTED);
