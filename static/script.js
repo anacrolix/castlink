@@ -192,13 +192,13 @@ function updateUI() {
     show('#player', apiReady());
     show('#no-devices-available', context() && context().getCastState() == cf.CastState.NO_DEVICES_AVAILABLE);
     show('#connected', context() && context().getCastState() == cf.CastState.CONNECTED);
-    show('#not-connected', !context() || context().getCastState() == cf.CastState.NOT_CONNECTED);
+    show('#not-connected', !context() || context().getCastState() != cf.CastState.CONNECTED);
     $('#connected-receiver-name').text(session() && session().getCastDevice().friendlyName);
-    $1('#request-session-button').prop('disabled', !(context() && _in(context().getSessionState(),
+    show('#request-session-button', context() && _in(context().getSessionState(),
         cf.SessionState.NO_SESSION,
         cf.SessionState.SESSION_ENDED,
         cf.SessionState.SESSION_START_FAILED
-    )));
+    ));
     show('#leave-session-button', apiReady() && _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
     show('#stop-session-button', apiReady() && _in(context().getSessionState(), cf.SessionState.SESSION_STARTED, cf.SessionState.SESSION_RESUMED));
     var m = media();
