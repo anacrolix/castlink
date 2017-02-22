@@ -1,5 +1,6 @@
 <html>
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cast Link</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
@@ -75,9 +76,6 @@
   <div id="no-devices-available" class="alert alert-danger initially-hidden">
     <strong>No receiver devices available.</strong> There appears to be no Chromecasts on your network. They may be switched off, or on a different network.
   </div>
-  <div id="connecting" class="alert alert-info initially-hidden">
-    Connecting
-  </div>
   <div id="connected" class="alert alert-success initially-hidden">
     <p>Connected to <strong id="connected-receiver-name"></strong>.</p>
     <button id="leave-session-button" class="btn btn-warning"><i class="fa fa-sign-out"></i> Leave</button>
@@ -85,6 +83,7 @@
   </div>
   <div id="not-connected" class="alert alert-warning initially-hidden">
     <p>Not connected to a device.</p>
+    <button id="connecting" class="btn btn-info"><i class="fa fa-spinner fa-pulse"></i> Connecting</button>
     <button id="request-session-button" class="btn btn-primary" type="button"><i class="fa fa-sign-in"></i> Connect</button>
   </div>
 
