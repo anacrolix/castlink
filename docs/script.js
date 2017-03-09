@@ -97,16 +97,15 @@ function loadMedia(spec) {
     var title = spec.title;
     var subtitle = spec.subtitle;
     var poster = spec.poster;
-    var tracks = [];
-    if (spec.subtitles) {
-        var enSubs = new chrome.cast.media.Track(1, chrome.cast.media.TrackType.TEXT);
-        enSubs.trackContentId = spec.subtitles;
-        enSubs.trackContentType = 'text/vtt';
-        enSubs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
-        enSubs.language = 'en-US';
-        tracks.push(enSubs);
-    }
     var mediaInfo = new chrome.cast.media.MediaInfo(url, 'video/mp4');
+    mediaInfo.tracks = spec.subtitles.map((val, i) => {
+        var subs = new chrome.cast.media.Track(i+1, chrome.cast.media.TrackType.TEXT);
+        subs.trackContentId = val;
+        subs.trackContentType = 'text/vtt';
+        subs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
+        subs.language = 'en-US';
+        return subs;
+    });
     var metadata = new chrome.cast.media.GenericMediaMetadata();
     if (poster) {
         metadata.images = [new chrome.cast.Image(poster)];
@@ -117,10 +116,9 @@ function loadMedia(spec) {
     }
     metadata.subtitle = subtitle || url;
     mediaInfo.metadata = metadata;
-    mediaInfo.tracks = tracks;
     mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
     var request = new chrome.cast.media.LoadRequest(mediaInfo);
-    if (spec.subtitles) {
+    if (mediaInfo.tracks.length) {
         request.activeTrackIds = [1];
     }
     request.autoplay = true;
@@ -301,7 +299,7 @@ $(document).ready(function() {
 function setMediaFormFromSpec(spec) {
     console.log('setting media form from spec', spec);
     $1('#media-content').val(spec.url);
-    $1('#media-subtitles').val(spec.subtitles);
+    $1('#media-subtitles').val(_.get(spec, 'subtitles[0]'));
     $1('#media-title').val(spec.title);
     $1('#media-poster').val(spec.poster);
     $1('#media-subtitle').val(spec.subtitle);
@@ -311,7 +309,7 @@ function setMediaFormFromSpec(spec) {
 function getMediaSpecFromForm() {
     return {
         url: $1('#media-content').val() || null,
-        subtitles: $1('#media-subtitles').val() || null,
+        subtitles: [$1('#media-subtitles').val()] || [],
         title: $1('#media-title').val() || null,
         poster: $1('#media-poster').val() || null,
         subtitle: $1('#media-subtitle').val() || null
@@ -321,7 +319,7 @@ function getMediaSpecFromForm() {
 function mediaSpecFromFragment() {
     return {
         url: parsedFragment.getLast('content'),
-        subtitles: parsedFragment.getLast('subtitles'),
+        subtitles: parsedFragment.map['subtitles'],
         title: parsedFragment.getLast('title'),
         poster: parsedFragment.getLast('poster'),
         subtitle: parsedFragment.getLast('subtitle')
@@ -388,15 +386,17 @@ function $1(sel) {
 var $plus = $1;
 
 function loadedMediaSpec() {
-    var m = media();
-    var mi = m && m.media;
+    var mi = _.get(media(), 'media');
     var md = mi && mi.metadata;
     return {
-        url: mi && mi.contentId,
-        subtitles: mi && mi.tracks && mi.tracks.length && mi.tracks[0].trackContentId || null,
+        url: _.get(mi, 'contentId'),
+        subtitles: (() => {
+            var ts = _.get(mi, 'tracks');
+            return ts && ts.map(t => t.trackContentId);
+        })(),
         poster: md && md.images && md.images[0].url,
         title: md && md.title,
-        subtitle: md && md.subtitle
+        subtitle: md && md.subtitle,
     };
 }
 
@@ -406,7 +406,8 @@ function mediaSpecsEqual(a, b) {
         a.subtitles == b.subtitles &&
         a.poster    == b.poster &&
         a.title     == b.title &&
-        a.subtitle  == b.subtitle);
+        a.subtitle  == b.subtitle
+    );
 }
 
 function linkFromMediaSpec(spec) {
