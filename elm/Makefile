@@ -1,2 +1,2 @@
-../static/elm.js: *.elm
+../docs/elm.js: *.elm
 	elm-make *.elm --output $@
