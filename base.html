@@ -5,12 +5,44 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css">
   {{ template "analytics" }}
-  {{ block "scripts" . }}{{ end }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.js"></script>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js"></script>
+  <!-- <script src="/script.js"></script> -->
+  <script src="/elm.js"></script>
   <style>
     {{ template "css" }}
   </style>
 </head>
 <body>
+  <script>
+    var gCastApiAvailable = new Promise((resolve, reject) => {
+      window['__onGCastApiAvailable'] =
+        (loaded, error) => {
+          console.log('resolving __onGCastApiAvailable', loaded, error)
+          if (!error) error = null
+          resolve({loaded, error})
+        }
+    });
+    var app = Elm.CastLink.fullscreen()
+    gCastApiAvailable.then(value => {
+      console.log('sending', value)
+      app.ports.onGCastApiAvailability.send(value)
+    })
+    // app.ports.gCastApiAvailable.subscribe(function() {
+    //   console.log('subscribing')
+    //   if (cast.framework) {
+    //     app.ports.onGCastApiAvailable.send({
+    //       loaded: true,
+    //       error: null,
+    //     })
+    //     return
+    //   }
+    // })
+  </script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1" type="text/javascript"></script>
+  {{ if false }}
   <div class="container-fluid">
     {{ template "navbar" }}
     <p></p>
@@ -19,6 +51,7 @@
     {{ template "footer" }}
     {{ template "ad" }}
   </div>
+  {{ end }}
 </body>
 </html>
 
