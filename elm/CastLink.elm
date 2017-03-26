@@ -23,10 +23,6 @@ type alias Model =
     Cast.ApiAvailability
 
 
-
---port onGCastApiAvailability :    Cast.onApiAvailability
-
-
 init =
     ( Cast.apiNotLoaded, Cmd.none )
 
