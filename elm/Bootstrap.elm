@@ -12,7 +12,7 @@ fluidContainer contents =
 
 navbarToggler : Html msg
 navbarToggler =
-    button
+    Html.button
         [ class "navbar-toggler navbar-toggler-right"
         , type_ "button"
         , property "data-toggle" <| string "collapse"
@@ -72,6 +72,7 @@ footer =
 type Context
     = Warning
     | Danger
+    | Primary
 
 
 contextString : Context -> String
@@ -82,6 +83,9 @@ contextString context =
 
         Danger ->
             "danger"
+
+        Primary ->
+            "primary"
 
 
 alert : Context -> List (Html msg) -> Html msg
@@ -95,6 +99,44 @@ simpleAlert context title msg =
         [ strong [] [ text title ]
         , text <| " " ++ msg
         ]
+
+
+type alias ButtonOptions =
+    { context : Context
+    , icon : FontAwesome
+    }
+
+
+type alias FontAwesome =
+    { symbol : String
+    , animation : Maybe ()
+    }
+
+
+fontAwesomeHtml : String -> Html msg
+fontAwesomeHtml fa =
+    span [ class <| "fa fa-" ++ fa ] []
+
+
+buttonContext : Context -> Attribute msg
+buttonContext ctx =
+    class <| "btn btn-" ++ contextString ctx
+
+
+button : Context -> Maybe String -> List (Attribute msg) -> String -> Html msg
+button ctx icon attrs text =
+    let
+        iconNodes =
+            case icon of
+                Just icon ->
+                    [ fontAwesomeHtml icon, Html.text " " ]
+
+                Nothing ->
+                    []
+    in
+        Html.button
+            (List.concat [ [ buttonContext ctx ], attrs ])
+            (iconNodes ++ [ Html.text text ])
 
 
 

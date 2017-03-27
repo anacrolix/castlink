@@ -1,8 +1,10 @@
 module CastLink exposing (..)
 
+import Debug exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Cast
+import Html.Events exposing (onClick)
+import Cast exposing (defaultOptions)
 import Json.Encode
 import Bootstrap exposing (..)
 
@@ -18,19 +20,37 @@ main =
 
 
 type Msg
-    = CastApiAvailable Cast.ApiAvailability
+    = ApiAvailability Cast.ApiAvailability
+    | CastContext Cast.Context
+    | RequestSession
 
 
 type alias Model =
-    Cast.ApiAvailability
+    { api : Cast.ApiAvailability
+    , setOptions : Bool
+    , context : Maybe Cast.Context
+    }
 
 
+init : ( Model, Cmd msg )
 init =
-    ( Cast.apiNotLoaded, Cmd.none )
+    ( initialModel, Cmd.none )
 
 
+initialModel : Model
+initialModel =
+    { api = Cast.apiNotLoaded
+    , setOptions = False
+    , context = Nothing
+    }
+
+
+subscriptions : Model -> Sub Msg
 subscriptions model =
-    Cast.onApiAvailability CastApiAvailable
+    Sub.batch
+        [ Cast.onApiAvailability ApiAvailability
+        , Cast.context CastContext
+        ]
 
 
 maybeToList : Maybe a -> List a
@@ -43,7 +63,7 @@ maybeToList maybe =
             []
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
     fluidContainer <|
         List.concat <|
@@ -51,9 +71,9 @@ view model =
               , p [] []
               ]
             , maybeToList <| contextAlerts model
-            , [ case model.loaded of
+            , [ case model.api.loaded of
                     True ->
-                        p [] [ text "loaded" ]
+                        Bootstrap.button Primary (Just "sign-in") [ onClick RequestSession ] "Connect"
 
                     False ->
                         p [] [ text "not loaded" ]
@@ -67,7 +87,7 @@ contextAlerts : Model -> Maybe (Html msg)
 contextAlerts model =
     let
         api =
-            model
+            model.api
     in
         case api.loaded of
             True ->
@@ -82,10 +102,47 @@ contextAlerts model =
                 Just <| simpleAlert Warning "API not loaded." "Session and player functions not yet available."
 
 
+update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
+    let
+        ( model2, cmd1 ) =
+            mainUpdate msg model
+
+        ( model3, cmd2 ) =
+            setOptions model2
+    in
+        ( model3, Cmd.batch [ cmd1, cmd2 ] )
+
+
+mainUpdate : Msg -> Model -> ( Model, Cmd msg )
+mainUpdate msg model =
     case msg of
-        CastApiAvailable api ->
-            ( api, Cmd.none )
+        ApiAvailability api ->
+            ( { model | api = api }, Cmd.none )
+
+        CastContext context ->
+            let
+                _ =
+                    log "cast context" context
+            in
+                ( { model | context = Just context }, Cmd.none )
+
+        RequestSession ->
+            ( model, Cast.requestSession () )
+
+
+setOptions : Model -> ( Model, Cmd msg )
+setOptions model =
+    if model.api.loaded && not model.setOptions then
+        ( { model | setOptions = True }
+        , Cast.setOptions
+            { defaultOptions
+                | resumeSavedSession = True
+                , receiverApplicationId = Just "911A4C88"
+            }
+        )
+    else
+        ( model, Cmd.none )
 
 
 adBlob : String

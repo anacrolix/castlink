@@ -35,10 +35,31 @@
           resolve({loaded, error})
         }
     });
+    function context() {
+      return cast.framework.CastContext.getInstance()
+    }
     var app = Elm.CastLink.fullscreen()
+    function toElmContext(c) {
+      return {
+        castState: c.getCastState(),
+        session: c.getCurrentSession(),
+      }
+    }
+    function sendContext() {
+      app.ports.context.send(toElmContext(context()))
+    }
     gCastApiAvailable.then(value => {
-      console.log('sending', value)
+      console.log('sending api availability', value)
       app.ports.onGCastApiAvailability.send(value)
+      context().addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, sendContext);
+      context().addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, sendContext);
+    })
+    app.ports.setOptions.subscribe(options => {
+      console.log('setting options', options)
+      cast.framework.CastContext.getInstance().setOptions(options)
+    })
+    app.ports.requestSession.subscribe(() => {
+      context().requestSession()
     })
     // app.ports.gCastApiAvailable.subscribe(function() {
     //   console.log('subscribing')
