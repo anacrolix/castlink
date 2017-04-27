@@ -53,6 +53,7 @@
       app.ports.onGCastApiAvailability.send(value)
       context().addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, sendContext);
       context().addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, sendContext);
+      sendContext()
     })
     app.ports.setOptions.subscribe(options => {
       console.log('setting options', options)
