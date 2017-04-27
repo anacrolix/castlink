@@ -1,9 +1,17 @@
 port module Cast exposing (..)
 
+import Debug
+
 
 type alias ApiAvailability =
     { loaded : Bool
     , error : Maybe String
+    }
+
+
+type alias JsContext =
+    { session : Maybe Session
+    , castState : String
     }
 
 
@@ -13,8 +21,40 @@ type alias Context =
     }
 
 
-type alias CastState =
-    String
+jsToElmContext : JsContext -> Context
+jsToElmContext js =
+    { js | castState = castStateFromString js.castState }
+
+
+type CastState
+    = NoDevicesAvailable
+    | NotConnected
+    | Connecting
+    | Connected
+
+
+castStateFromString : String -> CastState
+castStateFromString s =
+    case s of
+        "NO_DEVICES_AVAILABLE" ->
+            NoDevicesAvailable
+
+        "NOT_CONNECTED" ->
+            NotConnected
+
+        "CONNECTING" ->
+            Connecting
+
+        "CONNECTED" ->
+            Connected
+
+        uff ->
+            Debug.crash uff
+
+
+
+--type alias CastState =
+--    String
 
 
 type alias Session =
@@ -28,7 +68,7 @@ type alias SessionState =
 port onGCastApiAvailability : (ApiAvailability -> msg) -> Sub msg
 
 
-port context : (Context -> msg) -> Sub msg
+port context : (JsContext -> msg) -> Sub msg
 
 
 port setOptions : Options -> Cmd msg

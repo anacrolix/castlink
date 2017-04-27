@@ -3,6 +3,7 @@ module Bootstrap exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Json.Encode exposing (string)
+import List exposing (..)
 
 
 fluidContainer : List (Html msg) -> Html msg
@@ -21,21 +22,27 @@ navbarToggler =
         [ span [ class "navbar-toggler-icon" ] [] ]
 
 
-navbar : String -> List NavItem -> Html msg
-navbar brand items =
-    nav [ class "navbar navbar-inverse bg-inverse navbar-toggleable-sm" ]
-        [ navbarToggler
-        , a [ class "navbar-brand", href "/" ] [ text brand ]
-        , div [ id "navbarNavDropdown", class "collapse navbar-collapse" ]
-            [ ul [ class "navbar-nav mr-auto" ]
-                (List.map view items)
-            ]
-        ]
+type alias HtmlNodeMaker msg =
+    List (Html.Attribute msg) -> List (Html msg) -> Html msg
 
 
-view : NavItem -> Html msg
-view navItem =
-    li [ class "nav-item" ] [ a [ class "nav-link", href navItem.href ] [ text navItem.title ] ]
+
+--navbar : List (Html msg) -> List ( HtmlNodeMaker msg, List (Html.Attribute msg), List (Html msg) ) -> Html msg
+--navbar brand items =
+--    let lis =
+--        List.map
+--    nav
+--        [ class "navbar navbar-inverse bg-inverse navbar-toggleable-sm" ]
+--        [ navbarToggler
+--        , a [ class "navbar-brand", href "/" ] brand
+--        , div [ id "navbarNavDropdown", class "collapse navbar-collapse" ]
+--            [ ul [ class "navbar-nav mr-auto" ] (List.map (\( nm, as_, es ) -> i as_ es) items) ]
+--        ]
+
+
+navItem : { href : String, title : String } -> Html msg
+navItem { href, title } =
+    li [ class "nav-item" ] [ a [ class "nav-link", Html.Attributes.href href ] [ text title ] ]
 
 
 type alias NavItem =
@@ -137,6 +144,14 @@ button ctx icon attrs text =
         Html.button
             (List.concat [ [ buttonContext ctx ], attrs ])
             (iconNodes ++ [ Html.text text ])
+
+
+inlineForm attrs controls =
+    Html.form (class "form-inline" :: attrs) controls
+
+
+textInput attrs placeHolder =
+    Html.input (attrs ++ [ class "form-control", type_ "text", placeholder placeHolder ]) []
 
 
 
