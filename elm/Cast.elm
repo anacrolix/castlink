@@ -10,8 +10,24 @@ type alias ApiAvailability =
 
 
 type alias JsContext =
-    { session : Maybe Session
+    { session :
+        Maybe
+            { state : SessionState
+            , media :
+                Maybe
+                    { duration : Maybe Float
+                    , currentTime : Float
+                    , playerState : String
+                    }
+            }
     , castState : String
+    }
+
+
+type alias SessionMedia =
+    { duration : Maybe Float
+    , currentTime : Float
+    , playerState : PlayerState
     }
 
 
@@ -21,9 +37,31 @@ type alias Context =
     }
 
 
-jsToElmContext : JsContext -> Context
-jsToElmContext js =
-    { js | castState = castStateFromString js.castState }
+type alias Session =
+    { state : SessionState
+    , media : Maybe SessionMedia
+    }
+
+
+type alias SessionState =
+    String
+
+
+fromJsContext : JsContext -> Context
+fromJsContext c =
+    { c
+        | castState = castStateFromString c.castState
+        , session =
+            Maybe.map
+                (\s ->
+                    { s
+                        | media =
+                            Maybe.map (\m -> { m | playerState = toPlayerState m.playerState })
+                                s.media
+                    }
+                )
+                c.session
+    }
 
 
 type CastState
@@ -52,17 +90,23 @@ castStateFromString s =
             Debug.crash uff
 
 
+toPlayerState : String -> PlayerState
+toPlayerState s =
+    case s of
+        "IDLE" ->
+            Idle
 
---type alias CastState =
---    String
+        "PLAYING" ->
+            Playing
 
+        "PAUSED" ->
+            Paused
 
-type alias Session =
-    { state : SessionState }
+        "BUFFERING" ->
+            Buffering
 
-
-type alias SessionState =
-    String
+        uff ->
+            Debug.crash uff
 
 
 port onGCastApiAvailability : (ApiAvailability -> msg) -> Sub msg
@@ -75,6 +119,48 @@ port setOptions : Options -> Cmd msg
 
 
 port requestSession : () -> Cmd msg
+
+
+port loadMedia : Media -> Cmd msg
+
+
+port mediaLoaded : (Maybe String -> msg) -> Sub msg
+
+
+port controlPlayer : JsPlayerAction -> Cmd msg
+
+
+type alias JsPlayerAction =
+    { playOrPause : Bool
+    , seek : Maybe Float
+    }
+
+
+type PlayerAction
+    = PlayOrPause
+    | Seek Float
+
+
+type PlayerState
+    = Idle
+    | Playing
+    | Paused
+    | Buffering
+
+
+emptyPlayerAction : JsPlayerAction
+emptyPlayerAction =
+    { playOrPause = False, seek = Nothing }
+
+
+toJsPlayerAction : PlayerAction -> JsPlayerAction
+toJsPlayerAction pa =
+    case pa of
+        PlayOrPause ->
+            { emptyPlayerAction | playOrPause = True }
+
+        Seek time ->
+            { emptyPlayerAction | seek = Just time }
 
 
 type alias AutoJoinPolicy =
@@ -103,6 +189,7 @@ defaultOptions =
     }
 
 
+onApiAvailability : (ApiAvailability -> msg) -> Sub msg
 onApiAvailability =
     onGCastApiAvailability
 
@@ -110,3 +197,22 @@ onApiAvailability =
 apiNotLoaded : ApiAvailability
 apiNotLoaded =
     { loaded = False, error = Nothing }
+
+
+type alias Media =
+    { url : String
+    , title : String
+    , subtitle : String
+    , poster : String
+    , subtitles : List String
+    }
+
+
+exampleMedia : Media
+exampleMedia =
+    { url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    , subtitle = "1280x720 h264"
+    , title = "Big Buck Bunny"
+    , poster = "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg"
+    , subtitles = []
+    }

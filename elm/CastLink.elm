@@ -4,16 +4,19 @@ import Debug exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Cast exposing (defaultOptions)
 import Json.Encode
 import List
+import Cast exposing (defaultOptions)
 import Bootstrap exposing (..)
 import Navigation exposing (..)
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Card as Card
 import Bootstrap.Button as Button
-import Bootstrap.Alert as Alert
+import Bootstrap.Progress as Progress
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Textarea as Textarea
 
 
 main : Program Never Model Msg
@@ -33,6 +36,9 @@ type Msg
     | UrlChange Navigation.Location
     | Navigate String
     | NavbarMsg Navbar.State
+    | LoadMedia
+    | ProposedMediaInput (Cast.Media -> String -> Cast.Media) String
+    | ClickedPlayerControl Cast.PlayerAction
 
 
 type alias Model =
@@ -40,6 +46,7 @@ type alias Model =
     , setOptions : Bool
     , context : Maybe Cast.Context
     , navbarState : Navbar.State
+    , proposedMedia : Cast.Media
     }
 
 
@@ -53,6 +60,7 @@ init location =
           , setOptions = False
           , context = Nothing
           , navbarState = navbarState
+          , proposedMedia = Cast.exampleMedia
           }
         , navbarCmd
         )
@@ -93,8 +101,9 @@ view model =
             ++ viewFooter model
 
 
+cardHeader : String -> Card.Config Msg -> Card.Config Msg
 cardHeader s =
-    Card.headerH4 [] [ text s ]
+    Card.headerH5 [] [ text s ]
 
 
 viewContents : Model -> List (Html Msg)
@@ -130,9 +139,100 @@ mediaCard model =
         |> cardHeader "Media"
         |> Card.block []
             [ Card.custom <|
-                Button.button [ Button.primary ] [ text "Load into Player" ]
+                Button.button
+                    [ Button.primary
+                    , Button.onClick LoadMedia
+                    ]
+                    [ text "Load into Player" ]
+            , Card.custom <|
+                Form.form []
+                    (let
+                        pm =
+                            model.proposedMedia
+                     in
+                        [ Form.group []
+                            [ Form.label [] [ text "Title" ]
+                            , Input.text
+                                [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
+                                , Input.value pm.title
+                                ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Subtitle" ]
+                            , Input.text
+                                [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
+                                , Input.value pm.subtitle
+                                ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Content URL" ]
+                            , Textarea.textarea
+                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
+                                , Textarea.value pm.url
+                                ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Subtitles URL" ]
+                            , Textarea.textarea
+                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
+                                , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
+                                ]
+                            ]
+                        , Form.group []
+                            [ Form.label [] [ text "Poster URL" ]
+                            , Textarea.textarea
+                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
+                                , Textarea.value pm.poster
+                                ]
+                            ]
+                        ]
+                    )
             ]
         |> Card.view
+
+
+justList : List (Maybe a) -> List a
+justList =
+    let
+        f m l =
+            case m of
+                Just value ->
+                    value :: l
+
+                Nothing ->
+                    l
+    in
+        List.foldr f []
+
+
+playerButtons : Model -> List (Html Msg)
+playerButtons model =
+    justList
+        [ Just ( [ Button.primary ], [ text "Play" ] )
+        , Just ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Pause" ] )
+        ]
+        |> List.map (uncurry Button.button)
+
+
+progress : Model -> Maybe (Html Msg)
+progress model =
+    case Maybe.andThen .session model.context |> Maybe.andThen .media of
+        Just { currentTime, duration } ->
+            case duration of
+                Just d ->
+                    Just <|
+                        Progress.progress <|
+                            List.singleton <|
+                                Progress.attr <|
+                                    Html.Attributes.style
+                                        [ ( "width", (toString <| 100 * currentTime / d) ++ "%" )
+                                        ]
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing
 
 
 playerCard : Model -> Html Msg
@@ -140,12 +240,14 @@ playerCard model =
     Card.config []
         |> cardHeader "Player"
         |> Card.block []
-            [ Card.custom <|
-                Button.button [ Button.primary ] [ text "Play" ]
-            ]
+            (List.map Card.custom <|
+                (playerButtons model)
+                    ++ justList [ progress model ]
+            )
         |> Card.view
 
 
+viewFooter : Model -> List (Html Msg)
 viewFooter model =
     [ p [] []
     , p [ class "text-muted small text-center" ]
@@ -230,7 +332,7 @@ mainUpdate msg model =
                 _ =
                     log "cast context" context
             in
-                ( { model | context = Just <| Cast.jsToElmContext context }, Cmd.none )
+                ( { model | context = Just <| Cast.fromJsContext context }, Cmd.none )
 
         RequestSession ->
             ( model, Cast.requestSession () )
@@ -252,6 +354,15 @@ mainUpdate msg model =
         NavbarMsg state ->
             ( { model | navbarState = state }, Cmd.none )
 
+        LoadMedia ->
+            ( model, Cast.loadMedia model.proposedMedia )
+
+        ProposedMediaInput mediaUpdater s ->
+            ( { model | proposedMedia = mediaUpdater model.proposedMedia s }, Cmd.none )
+
+        ClickedPlayerControl action ->
+            ( model, Cast.controlPlayer <| Cast.toJsPlayerAction action )
+
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
 setOptions _ model =
@@ -269,7 +380,7 @@ setOptions _ model =
 
 adBlob : String
 adBlob =
-    """
+    String.trim <| """
 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 <ins class="adsbygoogle"
  style="display:block"
