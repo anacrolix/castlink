@@ -28,6 +28,7 @@ function elmCastContext(c) {
 					return {
 						duration: m.media.duration,
 						currentTime: m.getEstimatedTime(),
+						playerState: m.playerState,
 					};
 				}),
 			}

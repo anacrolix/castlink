@@ -16,7 +16,9 @@ import Bootstrap.Button as Button
 import Bootstrap.Progress as Progress
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
+import Json.Decode as JD exposing (..)
 import Bootstrap.Form.Textarea as Textarea
+import Maybe exposing (..)
 
 
 main : Program Never Model Msg
@@ -39,6 +41,7 @@ type Msg
     | LoadMedia
     | ProposedMediaInput (Cast.Media -> String -> Cast.Media) String
     | ClickedPlayerControl Cast.PlayerAction
+    | ProgressClicked Float
 
 
 type alias Model =
@@ -221,18 +224,43 @@ progress model =
             case duration of
                 Just d ->
                     Just <|
-                        Progress.progress <|
-                            List.singleton <|
-                                Progress.attr <|
-                                    Html.Attributes.style
-                                        [ ( "width", (toString <| 100 * currentTime / d) ++ "%" )
-                                        ]
+                        Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
+                            [ Progress.attr <|
+                                Html.Attributes.style
+                                    [ ( "width", (toString <| 100 * currentTime / d) ++ "%" )
+                                    ]
+                            ]
 
                 Nothing ->
                     Nothing
 
         Nothing ->
             Nothing
+
+
+traceDecoder : JD.Decoder msg -> JD.Decoder msg
+traceDecoder decoder =
+    JD.value
+        |> JD.andThen
+            (\value ->
+                case JD.decodeValue decoder value of
+                    Ok decoded ->
+                        JD.succeed <| Debug.log "herp" decoded
+
+                    Err err ->
+                        JD.fail <| Debug.log "error" <| err
+            )
+
+
+decodeProgressClick : Decoder Msg
+decodeProgressClick =
+    let
+        f x w =
+            ProgressClicked <| toFloat x / toFloat w
+    in
+        JD.map2 f
+            (field "offsetX" int)
+            (at [ "currentTarget", "clientWidth" ] int)
 
 
 playerCard : Model -> Html Msg
@@ -362,6 +390,16 @@ mainUpdate msg model =
 
         ClickedPlayerControl action ->
             ( model, Cast.controlPlayer <| Cast.toJsPlayerAction action )
+
+        ProgressClicked x ->
+            ( model
+            , case model.context |> Maybe.andThen .session |> Maybe.andThen .media |> Maybe.andThen .duration of
+                Just d ->
+                    Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek <| x * d
+
+                Nothing ->
+                    Cmd.none
+            )
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )

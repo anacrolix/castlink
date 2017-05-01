@@ -56,7 +56,8 @@ fromJsContext c =
                 (\s ->
                     { s
                         | media =
-                            Maybe.map (\m -> { m | playerState = toPlayerState m.playerState })
+                            Maybe.map
+                                (\m -> { m | playerState = toPlayerState m.playerState })
                                 s.media
                     }
                 )
