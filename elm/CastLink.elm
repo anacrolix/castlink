@@ -6,7 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Json.Encode
 import List
-import Cast exposing (defaultOptions)
+import Cast exposing (..)
 import Bootstrap exposing (..)
 import Navigation exposing (..)
 import Bootstrap.Grid as Grid
@@ -95,8 +95,8 @@ view model =
             |> Navbar.inverse
             |> Navbar.items
                 [ Navbar.itemLinkActive [ href "#" ] [ text "Link caster" ]
-                , Navbar.itemLink [ href "#about" ] [ text "About" ]
-                , Navbar.itemLink [ href "#dev" ] [ text "Use on your website" ]
+                  --, Navbar.itemLink [ href "#about" ] [ text "About" ]
+                  --, Navbar.itemLink [ href "#dev" ] [ text "Use on your website" ]
                 ]
             |> Navbar.view model.navbarState
         ]
@@ -210,32 +210,59 @@ justList =
 
 playerButtons : Model -> List (Html Msg)
 playerButtons model =
-    justList
-        [ Just ( [ Button.primary ], [ text "Play" ] )
-        , Just ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Pause" ] )
-        ]
-        |> List.map (uncurry Button.button)
+    case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
+        Just { playerState } ->
+            let
+                pause =
+                    ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Pause" ] )
+
+                play =
+                    ( [ Button.primary, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Play" ] )
+            in
+                List.map (uncurry Button.button) <|
+                    case playerState of
+                        Idle ->
+                            [ play ]
+
+                        Playing ->
+                            [ pause ]
+
+                        Paused ->
+                            [ play ]
+
+                        Buffering ->
+                            []
+
+        Nothing ->
+            []
 
 
 progress : Model -> Maybe (Html Msg)
 progress model =
-    case Maybe.andThen .session model.context |> Maybe.andThen .media of
-        Just { currentTime, duration } ->
-            case duration of
-                Just d ->
-                    Just <|
-                        Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
-                            [ Progress.attr <|
-                                Html.Attributes.style
-                                    [ ( "width", (toString <| 100 * currentTime / d) ++ "%" )
-                                    ]
-                            ]
+    Maybe.andThen .session model.context
+        |> Maybe.andThen .media
+        |> Maybe.andThen
+            (\m ->
+                case m.playerState of
+                    Idle ->
+                        Nothing
 
-                Nothing ->
-                    Nothing
+                    Buffering ->
+                        Nothing
 
-        Nothing ->
-            Nothing
+                    _ ->
+                        m.duration
+                            |> Maybe.andThen
+                                (\d ->
+                                    Just <|
+                                        Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
+                                            [ Progress.attr <|
+                                                Html.Attributes.style
+                                                    [ ( "width", (toString <| 100 * m.currentTime / d) ++ "%" )
+                                                    ]
+                                            ]
+                                )
+            )
 
 
 traceDecoder : JD.Decoder msg -> JD.Decoder msg
