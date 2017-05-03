@@ -19,6 +19,7 @@ import Bootstrap.Form.Input as Input
 import Json.Decode as JD exposing (..)
 import Bootstrap.Form.Textarea as Textarea
 import Maybe exposing (..)
+import String
 
 
 main : Program Never Model Msg
@@ -260,19 +261,42 @@ progress model =
                         ]
                 ]
 
-        elem_ : Cast.PlayerState -> Maybe (Html Msg)
-        elem_ ps =
-            case ps of
-                Idle ->
-                    Nothing
-
-                Buffering ->
-                    Nothing
-
-                otherwise ->
-                    Maybe.map2 elem media duration
+        card media duration =
+            Card.config []
+                |> Card.block []
+                    (List.map Card.custom
+                        [ div []
+                            [ span [] [ text <| secsToHhmmss << floor <| media.currentTime ]
+                            , span [ style [ ( "float", "right" ) ] ] [ text <| secsToHhmmss << floor <| duration ]
+                            ]
+                        , elem media duration
+                        ]
+                    )
+                |> Card.view
     in
-        Maybe.map2 elem media duration
+        Maybe.map2 card media duration
+
+
+secsToHhmmss : Int -> String
+secsToHhmmss s =
+    let
+        extract ( q, mm ) =
+            case mm of
+                Just m ->
+                    s // q % m
+
+                Nothing ->
+                    s // q
+
+        format =
+            String.padLeft 2 '0' << toString << extract
+    in
+        String.join ":" <|
+            List.map format
+                [ ( 3600, Nothing )
+                , ( 60, Just 60 )
+                , ( 1, Just 60 )
+                ]
 
 
 traceDecoder : JD.Decoder msg -> JD.Decoder msg
