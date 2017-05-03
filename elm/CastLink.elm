@@ -239,30 +239,40 @@ playerButtons model =
 
 progress : Model -> Maybe (Html Msg)
 progress model =
-    Maybe.andThen .session model.context
-        |> Maybe.andThen .media
-        |> Maybe.andThen
-            (\m ->
-                case m.playerState of
-                    Idle ->
-                        Nothing
+    let
+        andThen =
+            Maybe.andThen
 
-                    Buffering ->
-                        Nothing
+        media : Maybe Cast.SessionMedia
+        media =
+            model.context |> andThen .session |> andThen .media
 
-                    _ ->
-                        m.duration
-                            |> Maybe.andThen
-                                (\d ->
-                                    Just <|
-                                        Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
-                                            [ Progress.attr <|
-                                                Html.Attributes.style
-                                                    [ ( "width", (toString <| 100 * m.currentTime / d) ++ "%" )
-                                                    ]
-                                            ]
-                                )
-            )
+        duration : Maybe Float
+        duration =
+            andThen .duration media
+
+        elem : Cast.SessionMedia -> Float -> Html Msg
+        elem media duration =
+            Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
+                [ Progress.attr <|
+                    Html.Attributes.style
+                        [ ( "width", (toString <| 100 * media.currentTime / duration) ++ "%" )
+                        ]
+                ]
+
+        elem_ : Cast.PlayerState -> Maybe (Html Msg)
+        elem_ ps =
+            case ps of
+                Idle ->
+                    Nothing
+
+                Buffering ->
+                    Nothing
+
+                otherwise ->
+                    Maybe.map2 elem media duration
+    in
+        Maybe.map2 elem media duration
 
 
 traceDecoder : JD.Decoder msg -> JD.Decoder msg
@@ -297,7 +307,11 @@ playerCard model =
         |> Card.block []
             (List.map Card.custom <|
                 (playerButtons model)
-                    ++ justList [ progress model ]
+                    ++ let
+                        card node =
+                            Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
+                       in
+                        justList [ Maybe.map card <| progress model ]
             )
         |> Card.view
 
