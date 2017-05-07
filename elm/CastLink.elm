@@ -408,12 +408,12 @@ playerCard model =
             (case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
                 Just media ->
                     List.map Card.custom <|
-                        [ p [] [ playerButtons media ] ]
-                            ++ let
+                        playerButtons media
+                            :: let
                                 card node =
                                     Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
                                in
-                                justList [ Maybe.map card <| progress model ]
+                                justList [ progress model ]
 
                 Nothing ->
                     List.singleton <|
