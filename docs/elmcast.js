@@ -42,6 +42,7 @@ function elmCastContext(c) {
 						})(),
 					};
 				}),
+				deviceName: s.getCastDevice().friendlyName,
 			}
 		})(c.getCurrentSession())
 	}

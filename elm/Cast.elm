@@ -20,6 +20,7 @@ type alias JsContext =
                     , playerState : String
                     , spec : Media
                     }
+            , deviceName : String
             }
     , castState : String
     }
@@ -34,6 +35,7 @@ type alias Context =
 type alias Session =
     { state : SessionState
     , media : Maybe SessionMedia
+    , deviceName : String
     }
 
 

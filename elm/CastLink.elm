@@ -142,7 +142,9 @@ sessionCard model =
 
                                                 Connected ->
                                                     Alert.success <|
-                                                        [ Button.button [ Button.warning ] <| iconAndText [ "sign-out" ] "Leave"
+                                                        [ p [] [ text "Connected to ", strong [] [ text <| withDefault "" <| Maybe.map .deviceName context.session ], text "." ]
+                                                        , Button.button [ Button.warning ] <| iconAndText [ "sign-out" ] "Leave"
+                                                        , text " "
                                                         , Button.button [ Button.danger ] <| iconAndText [ "trash" ] "Stop"
                                                         ]
 
