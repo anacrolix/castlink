@@ -18,6 +18,7 @@ type alias JsContext =
                     { duration : Maybe Float
                     , currentTime : Float
                     , playerState : String
+                    , spec : Media
                     }
             }
     , castState : String
@@ -44,6 +45,7 @@ type alias SessionMedia =
     { duration : Maybe Float
     , currentTime : Float
     , playerState : PlayerState
+    , spec : Media
     }
 
 

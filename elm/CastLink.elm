@@ -9,6 +9,7 @@ import List
 import Cast exposing (..)
 import Bootstrap exposing (..)
 import Navigation exposing (..)
+import Bootstrap.ButtonGroup as ButtonGroup exposing (..)
 import Bootstrap.Alert as Alert
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
@@ -173,6 +174,18 @@ mediaCard model =
                 Button.button
                     [ Button.primary
                     , Button.onClick LoadMedia
+                    , Button.attrs <|
+                        List.singleton <|
+                            disabled <|
+                                withDefault True <|
+                                    Maybe.map
+                                        (\session ->
+                                            withDefault False <|
+                                                Maybe.map
+                                                    (\media -> media.spec == model.proposedMedia)
+                                                    session.media
+                                        )
+                                        (model.context |> Maybe.andThen .session)
                     ]
                     [ text "Load into Player" ]
             , Card.custom <|
@@ -244,9 +257,12 @@ iconAndText classes text =
     ]
 
 
-playerButtons : Cast.SessionMedia -> List (Html Msg)
+playerButtons : Cast.SessionMedia -> Html Msg
 playerButtons media =
     let
+        playerState =
+            media.playerState
+
         pause =
             ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "pause" ] "Pause" )
 
@@ -276,22 +292,23 @@ playerButtons media =
                 , ( 120, "fast-forward", "+2m" )
                 ]
     in
-        List.map (uncurry Button.button) <|
-            seekBackButtons
-                ++ (case media.playerState of
-                        Idle ->
-                            [ play ]
+        buttonGroup [] <|
+            List.map (uncurry ButtonGroup.button) <|
+                seekBackButtons
+                    ++ (case playerState of
+                            Idle ->
+                                [ play ]
 
-                        Playing ->
-                            [ pause, stop ]
+                            Playing ->
+                                [ pause, stop ]
 
-                        Paused ->
-                            [ play, stop ]
+                            Paused ->
+                                [ play, stop ]
 
-                        Buffering ->
-                            [ stop ]
-                   )
-                ++ seekForwardButtons
+                            Buffering ->
+                                [ stop ]
+                       )
+                    ++ seekForwardButtons
 
 
 progress : Model -> Maybe (Html Msg)
@@ -388,7 +405,7 @@ playerCard model =
             (case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
                 Just media ->
                     List.map Card.custom <|
-                        [ p [] <| playerButtons media ]
+                        [ p [] [ playerButtons media ] ]
                             ++ let
                                 card node =
                                     Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view

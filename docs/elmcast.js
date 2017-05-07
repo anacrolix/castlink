@@ -29,6 +29,17 @@ function elmCastContext(c) {
 						duration: m.media.duration,
 						currentTime: m.getEstimatedTime(),
 						playerState: m.playerState,
+						spec: (() => {
+							const mi = m.media;
+							const md = mi.metadata;
+							return {
+								url: m.media.contentId,
+								subtitles: mi.tracks.map(t => t.trackContentId),
+								poster: md.images[0].url,
+								title: md.title,
+								subtitle: md.subtitle,
+							};
+						})(),
 					};
 				}),
 			}
