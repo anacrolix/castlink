@@ -294,23 +294,24 @@ playerButtons media =
                 , ( 120, "fast-forward", "+2m" )
                 ]
     in
-        buttonGroup [] <|
-            List.map (uncurry ButtonGroup.button) <|
-                seekBackButtons
-                    ++ (case playerState of
-                            Idle ->
-                                [ play ]
+        p [] <|
+            List.intersperse (text " ") <|
+                List.map (uncurry Button.button) <|
+                    seekBackButtons
+                        ++ (case playerState of
+                                Idle ->
+                                    [ play ]
 
-                            Playing ->
-                                [ pause, stop ]
+                                Playing ->
+                                    [ pause, stop ]
 
-                            Paused ->
-                                [ play, stop ]
+                                Paused ->
+                                    [ play, stop ]
 
-                            Buffering ->
-                                [ stop ]
-                       )
-                    ++ seekForwardButtons
+                                Buffering ->
+                                    [ stop ]
+                           )
+                        ++ seekForwardButtons
 
 
 progress : Model -> Maybe (Html Msg)
