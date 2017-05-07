@@ -126,6 +126,9 @@ port setOptions : Options -> Cmd msg
 port requestSession : () -> Cmd msg
 
 
+port endCurrentSession : Bool -> Cmd msg
+
+
 port loadMedia : Media -> Cmd msg
 
 

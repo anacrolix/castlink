@@ -123,6 +123,9 @@ app.ports.controlPlayer.subscribe(action => {
 		rpc.stop();
 	}
 });
+app.ports.endCurrentSession.subscribe(stopCasting => {
+	context().endCurrentSession(stopCasting);
+});
 function mediaLoaded() {
 	sendMediaLoaded(null)
 }

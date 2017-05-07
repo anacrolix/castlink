@@ -45,6 +45,7 @@ type Msg
     | ProposedMediaInput (Cast.Media -> String -> Cast.Media) String
     | ClickedPlayerControl Cast.PlayerAction
     | ProgressClicked Float
+    | RunCmd (Cmd Msg)
 
 
 type alias Model =
@@ -143,9 +144,19 @@ sessionCard model =
                                                 Connected ->
                                                     Alert.success <|
                                                         [ p [] [ text "Connected to ", strong [] [ text <| withDefault "" <| Maybe.map .deviceName context.session ], text "." ]
-                                                        , Button.button [ Button.warning ] <| iconAndText [ "sign-out" ] "Leave"
+                                                        , Button.button
+                                                            [ Button.warning
+                                                            , Button.onClick <| RunCmd <| Cast.endCurrentSession False
+                                                            ]
+                                                          <|
+                                                            iconAndText [ "sign-out" ] "Leave"
                                                         , text " "
-                                                        , Button.button [ Button.danger ] <| iconAndText [ "trash" ] "Stop"
+                                                        , Button.button
+                                                            [ Button.danger
+                                                            , Button.onClick <| RunCmd <| Cast.endCurrentSession True
+                                                            ]
+                                                          <|
+                                                            iconAndText [ "trash" ] "Stop"
                                                         ]
 
                                                 NoDevicesAvailable ->
@@ -500,7 +511,7 @@ type alias Updater model msg =
     }
 
 
-mainUpdate : Msg -> Model -> ( Model, Cmd msg )
+mainUpdate : Msg -> Model -> ( Model, Cmd Msg )
 mainUpdate msg model =
     case msg of
         ApiAvailability api ->
@@ -551,6 +562,9 @@ mainUpdate msg model =
                 Nothing ->
                     Cmd.none
             )
+
+        RunCmd cmd ->
+            ( model, cmd )
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
