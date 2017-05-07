@@ -134,12 +134,14 @@ port controlPlayer : JsPlayerAction -> Cmd msg
 type alias JsPlayerAction =
     { playOrPause : Bool
     , seek : Maybe Float
+    , stop : Bool
     }
 
 
 type PlayerAction
     = PlayOrPause
     | Seek Float
+    | Stop
 
 
 type PlayerState
@@ -151,7 +153,10 @@ type PlayerState
 
 emptyPlayerAction : JsPlayerAction
 emptyPlayerAction =
-    { playOrPause = False, seek = Nothing }
+    { playOrPause = False
+    , seek = Nothing
+    , stop = False
+    }
 
 
 toJsPlayerAction : PlayerAction -> JsPlayerAction
@@ -162,6 +167,9 @@ toJsPlayerAction pa =
 
         Seek time ->
             { emptyPlayerAction | seek = Just time }
+
+        Stop ->
+            { emptyPlayerAction | stop = True }
 
 
 type alias AutoJoinPolicy =

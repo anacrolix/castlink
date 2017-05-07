@@ -107,6 +107,9 @@ app.ports.controlPlayer.subscribe(action => {
 		rp.currentTime = action.seek;
 		rpc.seek();
 	}
+	if (action.stop) {
+		rpc.stop();
+	}
 });
 function mediaLoaded() {
 	sendMediaLoaded(null)

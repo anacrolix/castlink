@@ -9,6 +9,7 @@ import List
 import Cast exposing (..)
 import Bootstrap exposing (..)
 import Navigation exposing (..)
+import Bootstrap.Alert as Alert
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Card as Card
@@ -125,10 +126,36 @@ sessionCard model =
                     , List.singleton <|
                         case model.api.loaded of
                             True ->
-                                Bootstrap.button Primary (Just "sign-in") [ onClick RequestSession ] "Connect"
+                                let
+                                    alert button =
+                                        Alert.warning <| (p [] [ text "Not connected to a device." ]) :: [ button ]
+                                in
+                                    case model.context of
+                                        Just context ->
+                                            case context.castState of
+                                                NotConnected ->
+                                                    alert <| Bootstrap.button Primary (Just "sign-in") [ onClick RequestSession ] "Connect"
+
+                                                Connecting ->
+                                                    alert <| Button.button [ Button.info ] <| iconAndText [ "pulse", "spinner" ] "Connecting"
+
+                                                Connected ->
+                                                    Alert.success <|
+                                                        [ Button.button [ Button.warning ] <| iconAndText [ "sign-out" ] "Leave"
+                                                        , Button.button [ Button.danger ] <| iconAndText [ "trash" ] "Stop"
+                                                        ]
+
+                                                NoDevicesAvailable ->
+                                                    Alert.danger <|
+                                                        [ strong [] [ text "No receiver devices available." ]
+                                                        , text "There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                        ]
+
+                                        Nothing ->
+                                            Alert.warning <| List.singleton <| p [] [ text "Context state unknown" ]
 
                             False ->
-                                p [] [ text "not loaded" ]
+                                Alert.warning [ p [] [ text "Cast API not loaded." ] ]
                     ]
     in
         Card.config []
@@ -209,33 +236,62 @@ justList =
         List.foldr f []
 
 
-playerButtons : Model -> List (Html Msg)
-playerButtons model =
-    case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
-        Just { playerState } ->
-            let
-                pause =
-                    ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Pause" ] )
+iconAndText : List String -> String -> List (Html msg)
+iconAndText classes text =
+    [ i (class "fa" :: List.map (\c -> class <| "fa-" ++ c) classes) []
+    , Html.text " "
+    , Html.text text
+    ]
 
-                play =
-                    ( [ Button.primary, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], [ text "Play" ] )
-            in
-                List.map (uncurry Button.button) <|
-                    case playerState of
+
+playerButtons : Cast.SessionMedia -> List (Html Msg)
+playerButtons media =
+    let
+        pause =
+            ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "pause" ] "Pause" )
+
+        play =
+            ( [ Button.primary, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "play" ] "Play" )
+
+        stop =
+            ( [ Button.danger, Button.onClick <| ClickedPlayerControl Cast.Stop ], iconAndText [ "stop" ] "Stop" )
+
+        seek time icon text =
+            ( [ Button.secondary, Button.onClick <| ClickedPlayerControl <| Cast.Seek time ], iconAndText [ icon ] text )
+
+        makeSeekButtons =
+            List.map <|
+                \( delta, icon, text ) ->
+                    seek (media.currentTime + delta) icon text
+
+        seekBackButtons =
+            makeSeekButtons
+                [ ( -120, "fast-backward", "-2m" )
+                , ( -30, "backward", "-30s" )
+                ]
+
+        seekForwardButtons =
+            makeSeekButtons
+                [ ( 30, "forward", "+30s" )
+                , ( 120, "fast-forward", "+2m" )
+                ]
+    in
+        List.map (uncurry Button.button) <|
+            seekBackButtons
+                ++ (case media.playerState of
                         Idle ->
                             [ play ]
 
                         Playing ->
-                            [ pause ]
+                            [ pause, stop ]
 
                         Paused ->
-                            [ play ]
+                            [ play, stop ]
 
                         Buffering ->
-                            []
-
-        Nothing ->
-            []
+                            [ stop ]
+                   )
+                ++ seekForwardButtons
 
 
 progress : Model -> Maybe (Html Msg)
@@ -329,13 +385,23 @@ playerCard model =
     Card.config []
         |> cardHeader "Player"
         |> Card.block []
-            (List.map Card.custom <|
-                (playerButtons model)
-                    ++ let
-                        card node =
-                            Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
-                       in
-                        justList [ Maybe.map card <| progress model ]
+            (case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
+                Just media ->
+                    List.map Card.custom <|
+                        [ p [] <| playerButtons media ]
+                            ++ let
+                                card node =
+                                    Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
+                               in
+                                justList [ Maybe.map card <| progress model ]
+
+                Nothing ->
+                    List.singleton <|
+                        Card.custom <|
+                            Alert.warning
+                                [ strong [] [ text "No media loaded." ]
+                                , text " Configure media below, and load it into the player."
+                                ]
             )
         |> Card.view
 
@@ -475,6 +541,7 @@ setOptions _ model =
             { defaultOptions
                 | resumeSavedSession = True
                 , receiverApplicationId = Just "911A4C88"
+                , autoJoinPolicy = Cast.originScoped
             }
         )
     else
