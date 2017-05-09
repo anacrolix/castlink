@@ -5,11 +5,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Json.Encode
-import List
+import List exposing (..)
 import Cast exposing (..)
 import Bootstrap exposing (..)
 import Navigation exposing (..)
-import Bootstrap.ButtonGroup as ButtonGroup exposing (..)
 import Bootstrap.Alert as Alert
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
@@ -22,6 +21,8 @@ import Json.Decode as JD exposing (..)
 import Bootstrap.Form.Textarea as Textarea
 import Maybe exposing (..)
 import String
+import Dict exposing (..)
+import Http
 
 
 main : Program Never Model Msg
@@ -46,6 +47,7 @@ type Msg
     | ClickedPlayerControl Cast.PlayerAction
     | ProgressClicked Float
     | RunCmd (Cmd Msg)
+    | Update (Model -> ( Model, Cmd Msg ))
 
 
 type alias Model =
@@ -60,6 +62,9 @@ type alias Model =
 init : Location -> ( Model, Cmd Msg )
 init location =
     let
+        _ =
+            Debug.log "init location" location
+
         ( navbarState, navbarCmd ) =
             Navbar.initialState NavbarMsg
     in
@@ -67,10 +72,97 @@ init location =
           , setOptions = False
           , context = Nothing
           , navbarState = navbarState
-          , proposedMedia = Cast.exampleMedia
+          , proposedMedia = locationMediaSpec location
           }
         , navbarCmd
         )
+
+
+locationMediaSpec : Location -> Cast.Media
+locationMediaSpec loc =
+    String.dropLeft 1 loc.hash |> parseQuerySpec
+
+
+type alias Query =
+    Dict String (List (Maybe String))
+
+
+first : String -> Query -> Maybe (Maybe String)
+first key query =
+    Dict.get key query |> Maybe.andThen head
+
+
+all : String -> Query -> List (Maybe String)
+all key query =
+    Dict.get key query |> Maybe.withDefault []
+
+
+parseQuery : String -> Query
+parseQuery query =
+    let
+        params : List String
+        params =
+            String.split "&" query
+
+        pairs : List ( String, Maybe String )
+        pairs =
+            List.map
+                (\param ->
+                    case String.split "=" param of
+                        key :: [] ->
+                            ( key, Nothing )
+
+                        key :: rest ->
+                            ( key, Just <| String.join "=" rest )
+
+                        [] ->
+                            Debug.crash "String.split returned empty list"
+                )
+                params
+
+        update : Maybe String -> Maybe (List (Maybe String)) -> Maybe (List (Maybe String))
+        update new old =
+            Just <|
+                case old of
+                    Nothing ->
+                        [ new ]
+
+                    Just list ->
+                        new :: list
+    in
+        pairs
+            |> List.foldr
+                (\( key, value ) ->
+                    Dict.update key <| update value
+                )
+                Dict.empty
+
+
+parseQuerySpec : String -> Cast.Media
+parseQuerySpec query =
+    let
+        _ =
+            Debug.log "query" query
+
+        specQuery =
+            parseQuery query
+
+        decode =
+            Http.decodeUri >> Maybe.withDefault ""
+
+        first_ key =
+            specQuery |> first key |> Maybe.andThen identity |> Maybe.map decode |> Maybe.withDefault ""
+
+        all_ key =
+            specQuery |> all key |> justList |> List.map decode
+    in
+        Debug.log "query spec" <|
+            Cast.Media
+                (first_ "content")
+                (first_ "title")
+                (first_ "subtitle")
+                (first_ "poster")
+                (all_ "subtitles")
 
 
 subscriptions : Model -> Sub Msg
@@ -178,74 +270,117 @@ sessionCard model =
             |> Card.view
 
 
+relatedButtons : List (Html Msg) -> List (Html Msg)
+relatedButtons =
+    List.intersperse (text "")
+
+
 mediaCard : Model -> Html Msg
 mediaCard model =
-    Card.config []
-        |> cardHeader "Media"
-        |> Card.block []
-            [ Card.custom <|
-                Button.button
-                    [ Button.primary
-                    , Button.onClick LoadMedia
-                    , Button.attrs <|
-                        List.singleton <|
-                            disabled <|
-                                withDefault True <|
-                                    Maybe.map
-                                        (\session ->
-                                            withDefault False <|
-                                                Maybe.map
-                                                    (\media -> media.spec == model.proposedMedia)
-                                                    session.media
-                                        )
-                                        (model.context |> Maybe.andThen .session)
-                    ]
-                    [ text "Load into Player" ]
-            , Card.custom <|
-                Form.form []
-                    (let
-                        pm =
-                            model.proposedMedia
-                     in
-                        [ Form.group []
-                            [ Form.label [] [ text "Title" ]
-                            , Input.text
-                                [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
-                                , Input.value pm.title
-                                ]
-                            ]
-                        , Form.group []
-                            [ Form.label [] [ text "Subtitle" ]
-                            , Input.text
-                                [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
-                                , Input.value pm.subtitle
-                                ]
-                            ]
-                        , Form.group []
-                            [ Form.label [] [ text "Content URL" ]
-                            , Textarea.textarea
-                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
-                                , Textarea.value pm.url
-                                ]
-                            ]
-                        , Form.group []
-                            [ Form.label [] [ text "Subtitles URL" ]
-                            , Textarea.textarea
-                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
-                                , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
-                                ]
-                            ]
-                        , Form.group []
-                            [ Form.label [] [ text "Poster URL" ]
-                            , Textarea.textarea
-                                [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
-                                , Textarea.value pm.poster
-                                ]
+    let
+        session =
+            model.context |> Maybe.andThen .session
+
+        loadedMedia : Maybe Cast.Media
+        loadedMedia =
+            session |> Maybe.andThen .media |> Maybe.map .spec
+
+        proposedMedia =
+            model.proposedMedia
+
+        haveSession =
+            case session of
+                Just _ ->
+                    True
+
+                Nothing ->
+                    False
+
+        loadButton =
+            Button.button
+                [ Button.primary
+                , Button.onClick LoadMedia
+                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia ]
+                ]
+                [ text "Load into Player" ]
+
+        setExample =
+            Button.button
+                [ Button.secondary
+                , Button.onClick <| Update <| \model -> ( { model | proposedMedia = Cast.exampleMedia }, Cmd.none )
+                , Button.attrs [ disabled <| proposedMedia == Cast.exampleMedia ]
+                ]
+                [ text "Set example" ]
+
+        copyLoaded =
+            Button.button
+                [ Button.secondary
+                , Button.onClick <|
+                    Update <|
+                        \model ->
+                            ( withDefault model <| Maybe.map (\media -> { model | proposedMedia = media }) loadedMedia
+                            , Cmd.none
+                            )
+                , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia ]
+                ]
+                [ text "Copy loaded" ]
+
+        specForm =
+            Form.form [] <|
+                let
+                    pm =
+                        model.proposedMedia
+                in
+                    [ Form.group []
+                        [ Form.label [] [ text "Title" ]
+                        , Input.text
+                            [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
+                            , Input.value pm.title
                             ]
                         ]
-                    )
-            ]
-        |> Card.view
+                    , Form.group []
+                        [ Form.label [] [ text "Subtitle" ]
+                        , Input.text
+                            [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
+                            , Input.value pm.subtitle
+                            ]
+                        ]
+                    , Form.group []
+                        [ Form.label [] [ text "Content URL" ]
+                        , Textarea.textarea
+                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
+                            , Textarea.value pm.url
+                            ]
+                        ]
+                    , Form.group []
+                        [ Form.label [] [ text "Subtitles URL" ]
+                        , Textarea.textarea
+                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
+                            , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
+                            ]
+                        ]
+                    , Form.group []
+                        [ Form.label [] [ text "Poster URL" ]
+                        , Textarea.textarea
+                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
+                            , Textarea.value pm.poster
+                            ]
+                        ]
+                    ]
+    in
+        Card.config []
+            |> cardHeader "Media"
+            |> Card.block []
+                (List.map
+                    Card.custom
+                    [ p [] <|
+                        List.intersperse
+                            (text " ")
+                            [ loadButton, setExample, copyLoaded ]
+                    , specForm
+                    ]
+                )
+            |> Card.view
 
 
 justList : List (Maybe a) -> List a
@@ -407,8 +542,8 @@ decodeProgressClick =
             ProgressClicked <| toFloat x / toFloat w
     in
         JD.map2 f
-            (field "offsetX" int)
-            (at [ "currentTarget", "clientWidth" ] int)
+            (field "offsetX" JD.int)
+            (at [ "currentTarget", "clientWidth" ] JD.int)
 
 
 playerCard : Model -> Html Msg
@@ -532,7 +667,7 @@ mainUpdate msg model =
                 _ =
                     log "UrlChange" loc
             in
-                ( model, Cmd.none )
+                ( { model | proposedMedia = locationMediaSpec loc }, Cmd.none )
 
         Navigate url ->
             let
@@ -565,6 +700,9 @@ mainUpdate msg model =
 
         RunCmd cmd ->
             ( model, cmd )
+
+        Update run ->
+            run model
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
