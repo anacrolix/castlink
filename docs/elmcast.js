@@ -74,7 +74,11 @@ app.ports.setOptions.subscribe(options => {
 	cast.framework.CastContext.getInstance().setOptions(options)
 })
 app.ports.requestSession.subscribe(() => {
-	context().requestSession()
+	context().requestSession().then(result => {
+		console.log('request session fullfilled:', result);
+	}, err => {
+		console.log('request session rejected:', err);
+	});
 })
 app.ports.loadMedia.subscribe(spec => {
 	var url = spec.url;
