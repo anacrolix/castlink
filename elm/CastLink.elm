@@ -48,6 +48,7 @@ type Msg
     | ProgressClicked Float
     | RunCmd (Cmd Msg)
     | Update (Model -> ( Model, Cmd Msg ))
+    | MouseoverProgress MouseoverEvent
 
 
 type alias Model =
@@ -56,6 +57,12 @@ type alias Model =
     , context : Maybe Cast.Context
     , navbarState : Navbar.State
     , proposedMedia : Cast.Media
+    , progressHover : Maybe MouseoverEvent
+    }
+
+
+type alias MouseoverEvent =
+    { offsetX : Int
     }
 
 
@@ -73,6 +80,7 @@ init location =
           , context = Nothing
           , navbarState = navbarState
           , proposedMedia = locationMediaSpec location
+          , progressHover = Nothing
           }
         , navbarCmd
         )
@@ -411,6 +419,9 @@ playerButtons media =
         playerState =
             media.playerState
 
+        buffering =
+            ( [ Button.info, Button.disabled True ], iconAndText [ "pulse", "spinner" ] "Buffering" )
+
         pause =
             ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "pause" ] "Pause" )
 
@@ -455,7 +466,7 @@ playerButtons media =
                                     [ play, stop ]
 
                                 Buffering ->
-                                    [ stop ]
+                                    [ buffering, stop ]
                            )
                         ++ seekForwardButtons
 
@@ -476,12 +487,30 @@ progress model =
 
         elem : Cast.SessionMedia -> Float -> Html Msg
         elem media duration =
-            Progress.progressWithAttrs [ Html.Events.on "click" decodeProgressClick ] <|
-                [ Progress.attr <|
-                    Html.Attributes.style
-                        [ ( "width", (toString <| 100 * media.currentTime / duration) ++ "%" )
-                        ]
+            div
+                [ class "progress"
+                , Html.Events.on "click" decodeProgressClick
+                , let
+                    defaultOptions =
+                        Html.Events.defaultOptions
+                  in
+                    Html.Events.on "mousemove" <| JD.map MouseoverProgress decodeMouseoverEvent
+                , style [ ( "position", "relative" ) ]
                 ]
+            <|
+                justList
+                    [ {- Maybe.map progressHoverPopup model.progressHover
+                         ,
+                      -}
+                      Just <|
+                        div
+                            [ class "progress-bar"
+                            , Html.Attributes.style
+                                [ ( "width", (toString <| 100 * media.currentTime / duration) ++ "%" )
+                                ]
+                            ]
+                            []
+                    ]
 
         card media duration =
             Card.config []
@@ -546,6 +575,14 @@ decodeProgressClick =
             (at [ "currentTarget", "clientWidth" ] JD.int)
 
 
+decodeMouseoverEvent : JD.Decoder MouseoverEvent
+decodeMouseoverEvent =
+    traceDecoder <|
+        JD.map
+            MouseoverEvent
+            (field "offsetX" int)
+
+
 playerCard : Model -> Html Msg
 playerCard model =
     Card.config []
@@ -570,6 +607,17 @@ playerCard model =
                                 ]
             )
         |> Card.view
+
+
+progressHoverPopup : MouseoverEvent -> Html Msg
+progressHoverPopup e =
+    p
+        [ style
+            [ ( "position", "absolute" )
+            , ( "left", toString e.offsetX )
+            ]
+        ]
+        [ text "herp" ]
 
 
 viewFooter : Model -> List (Html Msg)
@@ -703,6 +751,13 @@ mainUpdate msg model =
 
         Update run ->
             run model
+
+        MouseoverProgress e ->
+            let
+                _ =
+                    Debug.log "mouseover target" target
+            in
+                ( { model | progressHover = Just e }, Cmd.none )
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
