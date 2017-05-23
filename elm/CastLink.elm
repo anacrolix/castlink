@@ -48,6 +48,7 @@ type Msg
     | RunCmd (Cmd Msg)
     | Update (Model -> ( Model, Cmd Msg ))
     | MouseoverProgress MouseoverEvent
+    | MediaLoaded (Maybe String)
 
 
 type alias Model =
@@ -57,6 +58,7 @@ type alias Model =
     , navbarState : Navbar.State
     , proposedMedia : Cast.Media
     , progressHover : Maybe MouseoverEvent
+    , loadingMedia : Bool
     }
 
 
@@ -80,6 +82,7 @@ init location =
           , navbarState = navbarState
           , proposedMedia = locationMediaSpec location
           , progressHover = Nothing
+          , loadingMedia = False
           }
         , navbarCmd
         )
@@ -177,6 +180,7 @@ subscriptions model =
     Sub.batch
         [ Cast.onApiAvailability ApiAvailability
         , Cast.context CastContext
+        , Cast.mediaLoaded MediaLoaded
         ]
 
 
@@ -320,9 +324,13 @@ mediaCard model =
             Button.button
                 [ Button.primary
                 , Button.onClick LoadMedia
-                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia model.context ]
+                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia model.context || model.loadingMedia ]
                 ]
-                [ text "Load into Player" ]
+            <|
+                if model.loadingMedia then
+                    iconAndText [ "pulse", "spinner" ] "Loading"
+                else
+                    iconAndText [ "external-link" ] "Load into Player"
 
         setExample =
             Button.button
@@ -330,7 +338,8 @@ mediaCard model =
                 , Button.onClick <| Update <| \model -> ( { model | proposedMedia = Cast.exampleMedia }, Cmd.none )
                 , Button.attrs [ disabled <| proposedMedia == Cast.exampleMedia ]
                 ]
-                [ text "Set example" ]
+            <|
+                iconAndText [ "question" ] "Set example"
 
         copyLoaded =
             Button.button
@@ -343,7 +352,8 @@ mediaCard model =
                             )
                 , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia model.context ]
                 ]
-                [ text "Copy loaded" ]
+            <|
+                iconAndText [ "copy" ] "Copy loaded"
 
         specForm =
             Form.form [] <|
@@ -625,8 +635,7 @@ playerCard model =
     in
         Card.config []
             |> cardHeader "Player"
-            |> Card.block []
-                contents
+            |> Card.block [] contents
             |> Card.view
 
 
@@ -749,7 +758,7 @@ mainUpdate msg model =
             ( { model | navbarState = state }, Cmd.none )
 
         LoadMedia ->
-            ( model, Cast.loadMedia model.proposedMedia )
+            ( { model | loadingMedia = True }, Cast.loadMedia model.proposedMedia )
 
         ProposedMediaInput mediaUpdater s ->
             ( { model | proposedMedia = mediaUpdater model.proposedMedia s }, Cmd.none )
@@ -779,6 +788,9 @@ mainUpdate msg model =
                     Debug.log "mouseover target" target
             in
                 ( { model | progressHover = Just e }, Cmd.none )
+
+        MediaLoaded _ ->
+            ( { model | loadingMedia = False }, Cmd.none )
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )

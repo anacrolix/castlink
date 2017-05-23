@@ -16399,8 +16399,8 @@ var _user$project$CastLink$parseQuery = function (query) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'CastLink',
 					{
-						start: {line: 118, column: 21},
-						end: {line: 126, column: 75}
+						start: {line: 121, column: 21},
+						end: {line: 129, column: 75}
 					},
 					_p16)('String.split returned empty list');
 			}
@@ -16538,7 +16538,9 @@ var _user$project$CastLink$mainUpdate = F2(
 			case 'LoadMedia':
 				return {
 					ctor: '_Tuple2',
-					_0: model,
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{loadingMedia: true}),
 					_1: _user$project$Cast$loadMedia(model.proposedMedia)
 				};
 			case 'ProposedMediaInput':
@@ -16592,7 +16594,7 @@ var _user$project$CastLink$mainUpdate = F2(
 				return {ctor: '_Tuple2', _0: model, _1: _p22._0};
 			case 'Update':
 				return _p22._0(model);
-			default:
+			case 'MouseoverProgress':
 				var _p30 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
 				return {
 					ctor: '_Tuple2',
@@ -16601,6 +16603,14 @@ var _user$project$CastLink$mainUpdate = F2(
 						{
 							progressHover: _elm_lang$core$Maybe$Just(_p22._0)
 						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{loadingMedia: false}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
@@ -16622,9 +16632,9 @@ var _user$project$CastLink$update = F2(
 				}
 			});
 	});
-var _user$project$CastLink$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {api: a, setOptions: b, context: c, navbarState: d, proposedMedia: e, progressHover: f};
+var _user$project$CastLink$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {api: a, setOptions: b, context: c, navbarState: d, proposedMedia: e, progressHover: f, loadingMedia: g};
 	});
 var _user$project$CastLink$MouseoverEvent = function (a) {
 	return {offsetX: a};
@@ -16638,6 +16648,9 @@ var _user$project$CastLink$Updater = F3(
 	function (a, b, c) {
 		return {model: a, cmd: b, msg: c};
 	});
+var _user$project$CastLink$MediaLoaded = function (a) {
+	return {ctor: 'MediaLoaded', _0: a};
+};
 var _user$project$CastLink$MouseoverProgress = function (a) {
 	return {ctor: 'MouseoverProgress', _0: a};
 };
@@ -17350,11 +17363,14 @@ var _user$project$CastLink$mediaCard = function (model) {
 				}
 			}
 		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('Copy loaded'),
-			_1: {ctor: '[]'}
-		});
+		A2(
+			_user$project$CastLink$iconAndText,
+			{
+				ctor: '::',
+				_0: 'copy',
+				_1: {ctor: '[]'}
+			},
+			'Copy loaded'));
 	var proposedMedia = model.proposedMedia;
 	var setExample = A2(
 		_user$project$Bootstrap_Button$button,
@@ -17387,11 +17403,14 @@ var _user$project$CastLink$mediaCard = function (model) {
 				}
 			}
 		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('Set example'),
-			_1: {ctor: '[]'}
-		});
+		A2(
+			_user$project$CastLink$iconAndText,
+			{
+				ctor: '::',
+				_0: 'question',
+				_1: {ctor: '[]'}
+			},
+			'Set example'));
 	var session = A2(
 		_elm_lang$core$Maybe$andThen,
 		function (_) {
@@ -17420,20 +17439,34 @@ var _user$project$CastLink$mediaCard = function (model) {
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html_Attributes$disabled(
-								(!haveSession) || _elm_lang$core$Native_Utils.eq(
+								(!haveSession) || (_elm_lang$core$Native_Utils.eq(
 									_elm_lang$core$Maybe$Just(proposedMedia),
-									_user$project$CastLink$loadedMedia(model.context))),
+									_user$project$CastLink$loadedMedia(model.context)) || model.loadingMedia)),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
 				}
 			}
 		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('Load into Player'),
-			_1: {ctor: '[]'}
-		});
+		model.loadingMedia ? A2(
+			_user$project$CastLink$iconAndText,
+			{
+				ctor: '::',
+				_0: 'pulse',
+				_1: {
+					ctor: '::',
+					_0: 'spinner',
+					_1: {ctor: '[]'}
+				}
+			},
+			'Loading') : A2(
+			_user$project$CastLink$iconAndText,
+			{
+				ctor: '::',
+				_0: 'external-link',
+				_1: {ctor: '[]'}
+			},
+			'Load into Player'));
 	return _user$project$Bootstrap_Card$view(
 		A3(
 			_user$project$Bootstrap_Card$block,
@@ -17490,7 +17523,8 @@ var _user$project$CastLink$init = function (location) {
 			context: _elm_lang$core$Maybe$Nothing,
 			navbarState: navbarState,
 			proposedMedia: _user$project$CastLink$locationMediaSpec(location),
-			progressHover: _elm_lang$core$Maybe$Nothing
+			progressHover: _elm_lang$core$Maybe$Nothing,
+			loadingMedia: false
 		},
 		_1: navbarCmd
 	};
@@ -17809,7 +17843,11 @@ var _user$project$CastLink$subscriptions = function (model) {
 			_1: {
 				ctor: '::',
 				_0: _user$project$Cast$context(_user$project$CastLink$CastContext),
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: _user$project$Cast$mediaLoaded(_user$project$CastLink$MediaLoaded),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };

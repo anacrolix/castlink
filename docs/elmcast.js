@@ -111,7 +111,12 @@ app.ports.loadMedia.subscribe(spec => {
 	}
 	request.autoplay = true;
 	loading = true;
-	session().loadMedia(request).then(mediaLoaded, errorLoadingMedia);
+	session().loadMedia(request).then(() => {
+		sendMediaLoaded(null);
+	}, (e) => {
+		console.log('error loading media', e);
+		sendMediaLoaded(e);
+	});
 })
 app.ports.controlPlayer.subscribe(action => {
 	const rp = new cast.framework.RemotePlayer();
@@ -130,23 +135,6 @@ app.ports.controlPlayer.subscribe(action => {
 app.ports.endCurrentSession.subscribe(stopCasting => {
 	context().endCurrentSession(stopCasting);
 });
-function mediaLoaded() {
-	sendMediaLoaded(null)
-}
-function errorLoadingMedia(e) {
-	console.log('error loading media', e)
-	sendMediaLoaded(e)
-}
 function sendMediaLoaded(e) {
 	app.ports.mediaLoaded.send(e)
 }
-// app.ports.gCastApiAvailable.subscribe(function() {
-//   console.log('subscribing')
-//   if (cast.framework) {
-//     app.ports.onGCastApiAvailable.send({
-//       loaded: true,
-//       error: null,
-//     })
-//     return
-//   }
-// })
