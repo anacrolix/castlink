@@ -14,7 +14,6 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Card as Card
 import Bootstrap.Button as Button
-import Bootstrap.Progress as Progress
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Json.Decode as JD exposing (..)
@@ -283,15 +282,28 @@ relatedButtons =
     List.intersperse (text "")
 
 
+loadedMedia : Maybe Cast.Context -> Maybe Cast.Media
+loadedMedia context =
+    context
+        |> Maybe.andThen .session
+        |> Maybe.andThen .media
+        |> Maybe.andThen
+            (\sm ->
+                case sm.playerState of
+                    Idle ->
+                        Nothing
+
+                    _ ->
+                        Just sm
+            )
+        |> Maybe.map .spec
+
+
 mediaCard : Model -> Html Msg
 mediaCard model =
     let
         session =
             model.context |> Maybe.andThen .session
-
-        loadedMedia : Maybe Cast.Media
-        loadedMedia =
-            session |> Maybe.andThen .media |> Maybe.map .spec
 
         proposedMedia =
             model.proposedMedia
@@ -308,7 +320,7 @@ mediaCard model =
             Button.button
                 [ Button.primary
                 , Button.onClick LoadMedia
-                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia ]
+                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia model.context ]
                 ]
                 [ text "Load into Player" ]
 
@@ -326,10 +338,10 @@ mediaCard model =
                 , Button.onClick <|
                     Update <|
                         \model ->
-                            ( withDefault model <| Maybe.map (\media -> { model | proposedMedia = media }) loadedMedia
+                            ( withDefault model <| Maybe.map (\media -> { model | proposedMedia = media }) <| loadedMedia model.context
                             , Cmd.none
                             )
-                , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia ]
+                , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia model.context ]
                 ]
                 [ text "Copy loaded" ]
 
@@ -585,28 +597,37 @@ decodeMouseoverEvent =
 
 playerCard : Model -> Html Msg
 playerCard model =
-    Card.config []
-        |> cardHeader "Player"
-        |> Card.block []
-            (case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
+    let
+        noMedia =
+            List.singleton <|
+                Card.custom <|
+                    Alert.warning
+                        [ strong [] [ text "No media loaded." ]
+                        , text " Configure media below, and load it into the player."
+                        ]
+
+        contents =
+            case model.context |> Maybe.andThen .session |> Maybe.andThen .media of
                 Just media ->
-                    List.map Card.custom <|
-                        playerButtons media
-                            :: let
-                                card node =
-                                    Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
-                               in
-                                justList [ progress model ]
+                    if media.playerState == Idle then
+                        noMedia
+                    else
+                        List.map Card.custom <|
+                            playerButtons media
+                                :: let
+                                    card node =
+                                        Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
+                                   in
+                                    justList [ progress model ]
 
                 Nothing ->
-                    List.singleton <|
-                        Card.custom <|
-                            Alert.warning
-                                [ strong [] [ text "No media loaded." ]
-                                , text " Configure media below, and load it into the player."
-                                ]
-            )
-        |> Card.view
+                    noMedia
+    in
+        Card.config []
+            |> cardHeader "Player"
+            |> Card.block []
+                contents
+            |> Card.view
 
 
 progressHoverPopup : MouseoverEvent -> Html Msg

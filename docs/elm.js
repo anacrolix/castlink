@@ -15697,292 +15697,6 @@ var _user$project$Bootstrap_Navbar$dropdownHeader = function (children) {
 			children));
 };
 
-var _user$project$Bootstrap_Progress$roleClass = function (role) {
-	return _elm_lang$html$Html_Attributes$class(
-		function () {
-			var _p0 = role;
-			switch (_p0.ctor) {
-				case 'Success':
-					return 'bg-success';
-				case 'Info':
-					return 'bg-info';
-				case 'Warning':
-					return 'bg-warning';
-				default:
-					return 'bg-danger';
-			}
-		}());
-};
-var _user$project$Bootstrap_Progress$toAttributes = function (_p1) {
-	var _p2 = _p1;
-	var _p5 = _p2._0;
-	return _elm_lang$core$List$concat(
-		{
-			ctor: '::',
-			_0: {
-				ctor: '::',
-				_0: A2(_elm_lang$html$Html_Attributes$attribute, 'role', 'progressbar'),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html_Attributes$attribute,
-						'aria-value-now',
-						_elm_lang$core$Basics$toString(_p5.value)),
-					_1: {
-						ctor: '::',
-						_0: A2(_elm_lang$html$Html_Attributes$attribute, 'aria-valuemin', '0'),
-						_1: {
-							ctor: '::',
-							_0: A2(_elm_lang$html$Html_Attributes$attribute, 'aria-valuemax', '100'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$style(
-									{
-										ctor: '::',
-										_0: {
-											ctor: '_Tuple2',
-											_0: 'width',
-											_1: A2(
-												_elm_lang$core$Basics_ops['++'],
-												_elm_lang$core$Basics$toString(_p5.value),
-												'%')
-										},
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$classList(
-										{
-											ctor: '::',
-											_0: {ctor: '_Tuple2', _0: 'progress-bar', _1: true},
-											_1: {
-												ctor: '::',
-												_0: {ctor: '_Tuple2', _0: 'progress-bar-striped', _1: _p5.striped || _p5.animated},
-												_1: {
-													ctor: '::',
-													_0: {ctor: '_Tuple2', _0: 'progress-bar-animated', _1: _p5.animated},
-													_1: {ctor: '[]'}
-												}
-											}
-										}),
-									_1: {ctor: '[]'}
-								}
-							}
-						}
-					}
-				}
-			},
-			_1: {
-				ctor: '::',
-				_0: function () {
-					var _p3 = _p5.height;
-					if (_p3.ctor === 'Just') {
-						return {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$style(
-								{
-									ctor: '::',
-									_0: {
-										ctor: '_Tuple2',
-										_0: 'height',
-										_1: A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(_p3._0),
-											'px')
-									},
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						};
-					} else {
-						return {ctor: '[]'};
-					}
-				}(),
-				_1: {
-					ctor: '::',
-					_0: function () {
-						var _p4 = _p5.role;
-						if (_p4.ctor === 'Just') {
-							return {
-								ctor: '::',
-								_0: _user$project$Bootstrap_Progress$roleClass(_p4._0),
-								_1: {ctor: '[]'}
-							};
-						} else {
-							return {ctor: '[]'};
-						}
-					}(),
-					_1: {
-						ctor: '::',
-						_0: _p5.attributes,
-						_1: {ctor: '[]'}
-					}
-				}
-			}
-		});
-};
-var _user$project$Bootstrap_Progress$Attr = function (a) {
-	return {ctor: 'Attr', _0: a};
-};
-var _user$project$Bootstrap_Progress$attr = function (attr) {
-	return _user$project$Bootstrap_Progress$Attr(attr);
-};
-var _user$project$Bootstrap_Progress$Animated = function (a) {
-	return {ctor: 'Animated', _0: a};
-};
-var _user$project$Bootstrap_Progress$animated = _user$project$Bootstrap_Progress$Animated(true);
-var _user$project$Bootstrap_Progress$Striped = function (a) {
-	return {ctor: 'Striped', _0: a};
-};
-var _user$project$Bootstrap_Progress$striped = _user$project$Bootstrap_Progress$Striped(true);
-var _user$project$Bootstrap_Progress$Roled = function (a) {
-	return {ctor: 'Roled', _0: a};
-};
-var _user$project$Bootstrap_Progress$Label = function (a) {
-	return {ctor: 'Label', _0: a};
-};
-var _user$project$Bootstrap_Progress$label = function (text) {
-	return _user$project$Bootstrap_Progress$Label(
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text(text),
-			_1: {ctor: '[]'}
-		});
-};
-var _user$project$Bootstrap_Progress$customLabel = function (children) {
-	return _user$project$Bootstrap_Progress$Label(children);
-};
-var _user$project$Bootstrap_Progress$Height = function (a) {
-	return {ctor: 'Height', _0: a};
-};
-var _user$project$Bootstrap_Progress$height = function (height) {
-	return _user$project$Bootstrap_Progress$Height(
-		_elm_lang$core$Maybe$Just(height));
-};
-var _user$project$Bootstrap_Progress$Value = function (a) {
-	return {ctor: 'Value', _0: a};
-};
-var _user$project$Bootstrap_Progress$value = function (val) {
-	return _user$project$Bootstrap_Progress$Value(val);
-};
-var _user$project$Bootstrap_Progress$Danger = {ctor: 'Danger'};
-var _user$project$Bootstrap_Progress$danger = _user$project$Bootstrap_Progress$Roled(
-	_elm_lang$core$Maybe$Just(_user$project$Bootstrap_Progress$Danger));
-var _user$project$Bootstrap_Progress$Warning = {ctor: 'Warning'};
-var _user$project$Bootstrap_Progress$warning = _user$project$Bootstrap_Progress$Roled(
-	_elm_lang$core$Maybe$Just(_user$project$Bootstrap_Progress$Warning));
-var _user$project$Bootstrap_Progress$Info = {ctor: 'Info'};
-var _user$project$Bootstrap_Progress$info = _user$project$Bootstrap_Progress$Roled(
-	_elm_lang$core$Maybe$Just(_user$project$Bootstrap_Progress$Info));
-var _user$project$Bootstrap_Progress$Success = {ctor: 'Success'};
-var _user$project$Bootstrap_Progress$success = _user$project$Bootstrap_Progress$Roled(
-	_elm_lang$core$Maybe$Just(_user$project$Bootstrap_Progress$Success));
-var _user$project$Bootstrap_Progress$Options = function (a) {
-	return {ctor: 'Options', _0: a};
-};
-var _user$project$Bootstrap_Progress$applyOption = F2(
-	function (modifier, _p6) {
-		var _p7 = _p6;
-		var _p9 = _p7._0;
-		return _user$project$Bootstrap_Progress$Options(
-			function () {
-				var _p8 = modifier;
-				switch (_p8.ctor) {
-					case 'Value':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{value: _p8._0});
-					case 'Height':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{height: _p8._0});
-					case 'Label':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{label: _p8._0});
-					case 'Roled':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{role: _p8._0});
-					case 'Striped':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{striped: _p8._0});
-					case 'Animated':
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{animated: _p8._0});
-					default:
-						return _elm_lang$core$Native_Utils.update(
-							_p9,
-							{
-								attributes: {ctor: '::', _0: _p8._0, _1: _p9.attributes}
-							});
-				}
-			}());
-	});
-var _user$project$Bootstrap_Progress$defaultOptions = _user$project$Bootstrap_Progress$Options(
-	{
-		value: 0,
-		height: _elm_lang$core$Maybe$Nothing,
-		label: {ctor: '[]'},
-		role: _elm_lang$core$Maybe$Nothing,
-		striped: false,
-		animated: false,
-		attributes: {ctor: '[]'}
-	});
-var _user$project$Bootstrap_Progress$renderBar = function (modifiers) {
-	var _p10 = A3(_elm_lang$core$List$foldl, _user$project$Bootstrap_Progress$applyOption, _user$project$Bootstrap_Progress$defaultOptions, modifiers);
-	var options = _p10;
-	var opts = _p10._0;
-	return A2(
-		_elm_lang$html$Html$div,
-		_user$project$Bootstrap_Progress$toAttributes(options),
-		opts.label);
-};
-var _user$project$Bootstrap_Progress$progress = function (modifiers) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('progress'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _user$project$Bootstrap_Progress$renderBar(modifiers),
-			_1: {ctor: '[]'}
-		});
-};
-var _user$project$Bootstrap_Progress$progressWithAttrs = F2(
-	function (attrs, mods) {
-		return A2(
-			_elm_lang$html$Html$div,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('progress'),
-					_1: {ctor: '[]'}
-				},
-				attrs),
-			{
-				ctor: '::',
-				_0: _user$project$Bootstrap_Progress$renderBar(mods),
-				_1: {ctor: '[]'}
-			});
-	});
-var _user$project$Bootstrap_Progress$progressMulti = function (bars) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('progress'),
-			_1: {ctor: '[]'}
-		},
-		A2(_elm_lang$core$List$map, _user$project$Bootstrap_Progress$renderBar, bars));
-};
-
 var _user$project$Cast$exampleMedia = {
 	url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
 	subtitle: '1280x720 h264',
@@ -16600,6 +16314,34 @@ var _user$project$CastLink$justList = function () {
 		f,
 		{ctor: '[]'});
 }();
+var _user$project$CastLink$loadedMedia = function (context) {
+	return A2(
+		_elm_lang$core$Maybe$map,
+		function (_) {
+			return _.spec;
+		},
+		A2(
+			_elm_lang$core$Maybe$andThen,
+			function (sm) {
+				var _p13 = sm.playerState;
+				if (_p13.ctor === 'Idle') {
+					return _elm_lang$core$Maybe$Nothing;
+				} else {
+					return _elm_lang$core$Maybe$Just(sm);
+				}
+			},
+			A2(
+				_elm_lang$core$Maybe$andThen,
+				function (_) {
+					return _.media;
+				},
+				A2(
+					_elm_lang$core$Maybe$andThen,
+					function (_) {
+						return _.session;
+					},
+					context))));
+};
 var _user$project$CastLink$relatedButtons = _elm_lang$core$List$intersperse(
 	_elm_lang$html$Html$text(''));
 var _user$project$CastLink$cardHeader = function (s) {
@@ -16613,9 +16355,9 @@ var _user$project$CastLink$cardHeader = function (s) {
 		});
 };
 var _user$project$CastLink$maybeToList = function (maybe) {
-	var _p13 = maybe;
-	if (_p13.ctor === 'Just') {
-		return _elm_lang$core$List$singleton(_p13._0);
+	var _p14 = maybe;
+	if (_p14.ctor === 'Just') {
+		return _elm_lang$core$List$singleton(_p14._0);
 	} else {
 		return {ctor: '[]'};
 	}
@@ -16625,15 +16367,15 @@ var _user$project$CastLink$parseQuery = function (query) {
 		function ($new, old) {
 			return _elm_lang$core$Maybe$Just(
 				function () {
-					var _p14 = old;
-					if (_p14.ctor === 'Nothing') {
+					var _p15 = old;
+					if (_p15.ctor === 'Nothing') {
 						return {
 							ctor: '::',
 							_0: $new,
 							_1: {ctor: '[]'}
 						};
 					} else {
-						return {ctor: '::', _0: $new, _1: _p14._0};
+						return {ctor: '::', _0: $new, _1: _p15._0};
 					}
 				}());
 		});
@@ -16641,37 +16383,37 @@ var _user$project$CastLink$parseQuery = function (query) {
 	var pairs = A2(
 		_elm_lang$core$List$map,
 		function (param) {
-			var _p15 = A2(_elm_lang$core$String$split, '=', param);
-			if (_p15.ctor === '::') {
-				if (_p15._1.ctor === '[]') {
-					return {ctor: '_Tuple2', _0: _p15._0, _1: _elm_lang$core$Maybe$Nothing};
+			var _p16 = A2(_elm_lang$core$String$split, '=', param);
+			if (_p16.ctor === '::') {
+				if (_p16._1.ctor === '[]') {
+					return {ctor: '_Tuple2', _0: _p16._0, _1: _elm_lang$core$Maybe$Nothing};
 				} else {
 					return {
 						ctor: '_Tuple2',
-						_0: _p15._0,
+						_0: _p16._0,
 						_1: _elm_lang$core$Maybe$Just(
-							A2(_elm_lang$core$String$join, '=', _p15._1))
+							A2(_elm_lang$core$String$join, '=', _p16._1))
 					};
 				}
 			} else {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'CastLink',
 					{
-						start: {line: 119, column: 21},
-						end: {line: 127, column: 75}
+						start: {line: 118, column: 21},
+						end: {line: 126, column: 75}
 					},
-					_p15)('String.split returned empty list');
+					_p16)('String.split returned empty list');
 			}
 		},
 		params);
 	return A3(
 		_elm_lang$core$List$foldr,
-		function (_p17) {
-			var _p18 = _p17;
+		function (_p18) {
+			var _p19 = _p18;
 			return A2(
 				_elm_lang$core$Dict$update,
-				_p18._0,
-				update(_p18._1));
+				_p19._0,
+				update(_p19._1));
 		},
 		_elm_lang$core$Dict$empty,
 		pairs);
@@ -16691,11 +16433,11 @@ var _user$project$CastLink$first = F2(
 			A2(_elm_lang$core$Dict$get, key, query));
 	});
 var _user$project$CastLink$parseQuerySpec = function (query) {
-	var decode = function (_p19) {
+	var decode = function (_p20) {
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
 			'',
-			_elm_lang$http$Http$decodeUri(_p19));
+			_elm_lang$http$Http$decodeUri(_p20));
 	};
 	var specQuery = _user$project$CastLink$parseQuery(query);
 	var first_ = function (key) {
@@ -16717,7 +16459,7 @@ var _user$project$CastLink$parseQuerySpec = function (query) {
 			_user$project$CastLink$justList(
 				A2(_user$project$CastLink$all, key, specQuery)));
 	};
-	var _p20 = A2(_elm_lang$core$Debug$log, 'query', query);
+	var _p21 = A2(_elm_lang$core$Debug$log, 'query', query);
 	return A2(
 		_elm_lang$core$Debug$log,
 		'query spec',
@@ -16735,26 +16477,26 @@ var _user$project$CastLink$locationMediaSpec = function (loc) {
 };
 var _user$project$CastLink$mainUpdate = F2(
 	function (msg, model) {
-		var _p21 = msg;
-		switch (_p21.ctor) {
+		var _p22 = msg;
+		switch (_p22.ctor) {
 			case 'ApiAvailability':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{api: _p21._0}),
+						{api: _p22._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'CastContext':
-				var _p23 = _p21._0;
-				var _p22 = A2(_elm_lang$core$Debug$log, 'cast context', _p23);
+				var _p24 = _p22._0;
+				var _p23 = A2(_elm_lang$core$Debug$log, 'cast context', _p24);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
 							context: _elm_lang$core$Maybe$Just(
-								_user$project$Cast$fromJsContext(_p23))
+								_user$project$Cast$fromJsContext(_p24))
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16766,31 +16508,31 @@ var _user$project$CastLink$mainUpdate = F2(
 						{ctor: '_Tuple0'})
 				};
 			case 'UrlChange':
-				var _p25 = _p21._0;
-				var _p24 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p25);
+				var _p26 = _p22._0;
+				var _p25 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p26);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							proposedMedia: _user$project$CastLink$locationMediaSpec(_p25)
+							proposedMedia: _user$project$CastLink$locationMediaSpec(_p26)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Navigate':
-				var _p27 = _p21._0;
-				var _p26 = A2(_elm_lang$core$Debug$log, 'Navigate', _p27);
+				var _p28 = _p22._0;
+				var _p27 = A2(_elm_lang$core$Debug$log, 'Navigate', _p28);
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: _elm_lang$navigation$Navigation$newUrl(_p27)
+					_1: _elm_lang$navigation$Navigation$newUrl(_p28)
 				};
 			case 'NavbarMsg':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{navbarState: _p21._0}),
+						{navbarState: _p22._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'LoadMedia':
@@ -16805,7 +16547,7 @@ var _user$project$CastLink$mainUpdate = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							proposedMedia: A2(_p21._0, model.proposedMedia, _p21._1)
+							proposedMedia: A2(_p22._0, model.proposedMedia, _p22._1)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16814,14 +16556,14 @@ var _user$project$CastLink$mainUpdate = F2(
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$Cast$controlPlayer(
-						_user$project$Cast$toJsPlayerAction(_p21._0))
+						_user$project$Cast$toJsPlayerAction(_p22._0))
 				};
 			case 'ProgressClicked':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: function () {
-						var _p28 = A2(
+						var _p29 = A2(
 							_elm_lang$core$Maybe$andThen,
 							function (_) {
 								return _.duration;
@@ -16837,27 +16579,27 @@ var _user$project$CastLink$mainUpdate = F2(
 										return _.session;
 									},
 									model.context)));
-						if (_p28.ctor === 'Just') {
+						if (_p29.ctor === 'Just') {
 							return _user$project$Cast$controlPlayer(
 								_user$project$Cast$toJsPlayerAction(
-									_user$project$Cast$Seek(_p21._0 * _p28._0)));
+									_user$project$Cast$Seek(_p22._0 * _p29._0)));
 						} else {
 							return _elm_lang$core$Platform_Cmd$none;
 						}
 					}()
 				};
 			case 'RunCmd':
-				return {ctor: '_Tuple2', _0: model, _1: _p21._0};
+				return {ctor: '_Tuple2', _0: model, _1: _p22._0};
 			case 'Update':
-				return _p21._0(model);
+				return _p22._0(model);
 			default:
-				var _p29 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
+				var _p30 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							progressHover: _elm_lang$core$Maybe$Just(_p21._0)
+							progressHover: _elm_lang$core$Maybe$Just(_p22._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16865,7 +16607,7 @@ var _user$project$CastLink$mainUpdate = F2(
 	});
 var _user$project$CastLink$update = F2(
 	function (msg, model) {
-		var _p30 = A2(_elm_lang$core$Debug$log, 'update', msg);
+		var _p31 = A2(_elm_lang$core$Debug$log, 'update', msg);
 		return A3(
 			_user$project$CastLink$chainUpdates,
 			msg,
@@ -17017,9 +16759,9 @@ var _user$project$CastLink$progress = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												function (_p31) {
+												function (_p32) {
 													return _user$project$CastLink$secsToHhmmss(
-														_elm_lang$core$Basics$floor(_p31));
+														_elm_lang$core$Basics$floor(_p32));
 												}(media.currentTime)),
 											_1: {ctor: '[]'}
 										}),
@@ -17040,9 +16782,9 @@ var _user$project$CastLink$progress = function (model) {
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html$text(
-													function (_p32) {
+													function (_p33) {
 														return _user$project$CastLink$secsToHhmmss(
-															_elm_lang$core$Basics$floor(_p32));
+															_elm_lang$core$Basics$floor(_p33));
 													}(duration)),
 												_1: {ctor: '[]'}
 											}),
@@ -17108,9 +16850,9 @@ var _user$project$CastLink$playerButtons = function (media) {
 			};
 		});
 	var makeSeekButtons = _elm_lang$core$List$map(
-		function (_p33) {
-			var _p34 = _p33;
-			return A3(seek, media.currentTime + _p34._0, _p34._1, _p34._2);
+		function (_p34) {
+			var _p35 = _p34;
+			return A3(seek, media.currentTime + _p35._0, _p35._1, _p35._2);
 		});
 	var seekBackButtons = makeSeekButtons(
 		{
@@ -17235,8 +16977,8 @@ var _user$project$CastLink$playerButtons = function (media) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						function () {
-							var _p35 = playerState;
-							switch (_p35.ctor) {
+							var _p36 = playerState;
+							switch (_p36.ctor) {
 								case 'Idle':
 									return {
 										ctor: '::',
@@ -17278,73 +17020,76 @@ var _user$project$CastLink$playerButtons = function (media) {
 						seekForwardButtons)))));
 };
 var _user$project$CastLink$playerCard = function (model) {
+	var noMedia = _elm_lang$core$List$singleton(
+		_user$project$Bootstrap_Card$custom(
+			_user$project$Bootstrap_Alert$warning(
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$strong,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('No media loaded.'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(' Configure media below, and load it into the player.'),
+						_1: {ctor: '[]'}
+					}
+				})));
+	var contents = function () {
+		var _p37 = A2(
+			_elm_lang$core$Maybe$andThen,
+			function (_) {
+				return _.media;
+			},
+			A2(
+				_elm_lang$core$Maybe$andThen,
+				function (_) {
+					return _.session;
+				},
+				model.context));
+		if (_p37.ctor === 'Just') {
+			var _p38 = _p37._0;
+			return _elm_lang$core$Native_Utils.eq(_p38.playerState, _user$project$Cast$Idle) ? noMedia : A2(
+				_elm_lang$core$List$map,
+				_user$project$Bootstrap_Card$custom,
+				{
+					ctor: '::',
+					_0: _user$project$CastLink$playerButtons(_p38),
+					_1: function () {
+						var card = function (node) {
+							return _user$project$Bootstrap_Card$view(
+								A3(
+									_user$project$Bootstrap_Card$block,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _user$project$Bootstrap_Card$custom(node),
+										_1: {ctor: '[]'}
+									},
+									_user$project$Bootstrap_Card$config(
+										{ctor: '[]'})));
+						};
+						return _user$project$CastLink$justList(
+							{
+								ctor: '::',
+								_0: _user$project$CastLink$progress(model),
+								_1: {ctor: '[]'}
+							});
+					}()
+				});
+		} else {
+			return noMedia;
+		}
+	}();
 	return _user$project$Bootstrap_Card$view(
 		A3(
 			_user$project$Bootstrap_Card$block,
 			{ctor: '[]'},
-			function () {
-				var _p36 = A2(
-					_elm_lang$core$Maybe$andThen,
-					function (_) {
-						return _.media;
-					},
-					A2(
-						_elm_lang$core$Maybe$andThen,
-						function (_) {
-							return _.session;
-						},
-						model.context));
-				if (_p36.ctor === 'Just') {
-					return A2(
-						_elm_lang$core$List$map,
-						_user$project$Bootstrap_Card$custom,
-						{
-							ctor: '::',
-							_0: _user$project$CastLink$playerButtons(_p36._0),
-							_1: function () {
-								var card = function (node) {
-									return _user$project$Bootstrap_Card$view(
-										A3(
-											_user$project$Bootstrap_Card$block,
-											{ctor: '[]'},
-											{
-												ctor: '::',
-												_0: _user$project$Bootstrap_Card$custom(node),
-												_1: {ctor: '[]'}
-											},
-											_user$project$Bootstrap_Card$config(
-												{ctor: '[]'})));
-								};
-								return _user$project$CastLink$justList(
-									{
-										ctor: '::',
-										_0: _user$project$CastLink$progress(model),
-										_1: {ctor: '[]'}
-									});
-							}()
-						});
-				} else {
-					return _elm_lang$core$List$singleton(
-						_user$project$Bootstrap_Card$custom(
-							_user$project$Bootstrap_Alert$warning(
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$strong,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('No media loaded.'),
-											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(' Configure media below, and load it into the player.'),
-										_1: {ctor: '[]'}
-									}
-								})));
-				}
-			}(),
+			contents,
 			A2(
 				_user$project$CastLink$cardHeader,
 				'Player',
@@ -17564,6 +17309,52 @@ var _user$project$CastLink$mediaCard = function (model) {
 				}
 			};
 		}());
+	var copyLoaded = A2(
+		_user$project$Bootstrap_Button$button,
+		{
+			ctor: '::',
+			_0: _user$project$Bootstrap_Button$secondary,
+			_1: {
+				ctor: '::',
+				_0: _user$project$Bootstrap_Button$onClick(
+					_user$project$CastLink$Update(
+						function (model) {
+							return {
+								ctor: '_Tuple2',
+								_0: A2(
+									_elm_lang$core$Maybe$withDefault,
+									model,
+									A2(
+										_elm_lang$core$Maybe$map,
+										function (media) {
+											return _elm_lang$core$Native_Utils.update(
+												model,
+												{proposedMedia: media});
+										},
+										_user$project$CastLink$loadedMedia(model.context))),
+								_1: _elm_lang$core$Platform_Cmd$none
+							};
+						})),
+				_1: {
+					ctor: '::',
+					_0: _user$project$Bootstrap_Button$attrs(
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$disabled(
+								_elm_lang$core$Native_Utils.eq(
+									_elm_lang$core$Maybe$Just(model.proposedMedia),
+									_user$project$CastLink$loadedMedia(model.context))),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			}
+		},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text('Copy loaded'),
+			_1: {ctor: '[]'}
+		});
 	var proposedMedia = model.proposedMedia;
 	var setExample = A2(
 		_user$project$Bootstrap_Button$button,
@@ -17607,66 +17398,9 @@ var _user$project$CastLink$mediaCard = function (model) {
 			return _.session;
 		},
 		model.context);
-	var loadedMedia = A2(
-		_elm_lang$core$Maybe$map,
-		function (_) {
-			return _.spec;
-		},
-		A2(
-			_elm_lang$core$Maybe$andThen,
-			function (_) {
-				return _.media;
-			},
-			session));
-	var copyLoaded = A2(
-		_user$project$Bootstrap_Button$button,
-		{
-			ctor: '::',
-			_0: _user$project$Bootstrap_Button$secondary,
-			_1: {
-				ctor: '::',
-				_0: _user$project$Bootstrap_Button$onClick(
-					_user$project$CastLink$Update(
-						function (model) {
-							return {
-								ctor: '_Tuple2',
-								_0: A2(
-									_elm_lang$core$Maybe$withDefault,
-									model,
-									A2(
-										_elm_lang$core$Maybe$map,
-										function (media) {
-											return _elm_lang$core$Native_Utils.update(
-												model,
-												{proposedMedia: media});
-										},
-										loadedMedia)),
-								_1: _elm_lang$core$Platform_Cmd$none
-							};
-						})),
-				_1: {
-					ctor: '::',
-					_0: _user$project$Bootstrap_Button$attrs(
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$disabled(
-								_elm_lang$core$Native_Utils.eq(
-									_elm_lang$core$Maybe$Just(model.proposedMedia),
-									loadedMedia)),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			}
-		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text('Copy loaded'),
-			_1: {ctor: '[]'}
-		});
 	var haveSession = function () {
-		var _p37 = session;
-		if (_p37.ctor === 'Just') {
+		var _p39 = session;
+		if (_p39.ctor === 'Just') {
 			return true;
 		} else {
 			return false;
@@ -17688,7 +17422,7 @@ var _user$project$CastLink$mediaCard = function (model) {
 							_0: _elm_lang$html$Html_Attributes$disabled(
 								(!haveSession) || _elm_lang$core$Native_Utils.eq(
 									_elm_lang$core$Maybe$Just(proposedMedia),
-									loadedMedia)),
+									_user$project$CastLink$loadedMedia(model.context))),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
@@ -17744,10 +17478,10 @@ var _user$project$CastLink$NavbarMsg = function (a) {
 	return {ctor: 'NavbarMsg', _0: a};
 };
 var _user$project$CastLink$init = function (location) {
-	var _p38 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
-	var navbarState = _p38._0;
-	var navbarCmd = _p38._1;
-	var _p39 = A2(_elm_lang$core$Debug$log, 'init location', location);
+	var _p40 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
+	var navbarState = _p40._0;
+	var navbarCmd = _p40._1;
+	var _p41 = A2(_elm_lang$core$Debug$log, 'init location', location);
 	return {
 		ctor: '_Tuple2',
 		_0: {
@@ -17781,8 +17515,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					ctor: '::',
 					_0: _elm_lang$core$List$singleton(
 						function () {
-							var _p40 = model.api.loaded;
-							if (_p40 === true) {
+							var _p42 = model.api.loaded;
+							if (_p42 === true) {
 								var alert = function (button) {
 									return _user$project$Bootstrap_Alert$warning(
 										{
@@ -17802,11 +17536,11 @@ var _user$project$CastLink$sessionCard = function (model) {
 											}
 										});
 								};
-								var _p41 = model.context;
-								if (_p41.ctor === 'Just') {
-									var _p43 = _p41._0;
-									var _p42 = _p43.castState;
-									switch (_p42.ctor) {
+								var _p43 = model.context;
+								if (_p43.ctor === 'Just') {
+									var _p45 = _p43._0;
+									var _p44 = _p45.castState;
+									switch (_p44.ctor) {
 										case 'NotConnected':
 											return alert(
 												A4(
@@ -17866,7 +17600,7 @@ var _user$project$CastLink$sessionCard = function (model) {
 																					function (_) {
 																						return _.deviceName;
 																					},
-																					_p43.session))),
+																					_p45.session))),
 																		_1: {ctor: '[]'}
 																	}),
 																_1: {
