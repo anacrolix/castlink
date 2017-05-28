@@ -21,7 +21,8 @@ import Bootstrap.Form.Textarea as Textarea
 import Maybe exposing (..)
 import String
 import Http
-import Query exposing(..)
+import Query exposing (..)
+import Markdown
 
 
 main : Program Never Model Msg
@@ -49,6 +50,7 @@ type Msg
     | Update (Model -> ( Model, Cmd Msg ))
     | MouseoverProgress MouseoverEvent
     | MediaLoaded (Maybe String)
+    | SetPage Page
 
 
 type alias Model =
@@ -59,6 +61,7 @@ type alias Model =
     , proposedMedia : Cast.Media
     , progressHover : Maybe MouseoverEvent
     , loadingMedia : Bool
+    , page : Page
     }
 
 
@@ -83,6 +86,7 @@ init location =
           , proposedMedia = locationMediaSpec location
           , progressHover = Nothing
           , loadingMedia = False
+          , page = Caster
           }
         , navbarCmd
         )
@@ -92,6 +96,11 @@ locationMediaSpec : Location -> Cast.Media
 locationMediaSpec loc =
     String.dropLeft 1 loc.hash |> parseQuerySpec
 
+
+type Page
+    = Caster
+    | About
+    | Dev
 
 
 parseQuerySpec : String -> Cast.Media
@@ -140,21 +149,37 @@ maybeToList maybe =
             []
 
 
+voidHref : Html.Attribute msg
+voidHref =
+    href "javascript:void(0)"
+
+
 view : Model -> Html Msg
 view model =
-    Grid.container [] <|
-        [ Navbar.config NavbarMsg
-            |> Navbar.brand [ href "#" ] [ text "chromecast.link" ]
-            |> Navbar.inverse
-            |> Navbar.items
-                [ Navbar.itemLinkActive [ href "#" ] [ text "Link caster" ]
-                  --, Navbar.itemLink [ href "#about" ] [ text "About" ]
-                  --, Navbar.itemLink [ href "#dev" ] [ text "Use on your website" ]
-                ]
-            |> Navbar.view model.navbarState
-        ]
-            ++ viewContents model
-            ++ viewFooter model
+    let
+        navItem page text =
+            let
+                maker =
+                    if model.page == page then
+                        Navbar.itemLinkActive
+                    else
+                        Navbar.itemLink
+            in
+                maker [ voidHref, onClick <| SetPage page ] [ Html.text text ]
+    in
+        Grid.container [] <|
+            [ Navbar.config NavbarMsg
+                |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
+                |> Navbar.inverse
+                |> Navbar.items
+                    --[ navItem Caster "Link caster"
+                    [ navItem About "About"
+                    , navItem Dev "Use on your website"
+                    ]
+                |> Navbar.view model.navbarState
+            ]
+                ++ viewContents model
+                ++ viewFooter model
 
 
 cardHeader : String -> Card.Config Msg -> Card.Config Msg
@@ -164,7 +189,41 @@ cardHeader s =
 
 viewContents : Model -> List (Html Msg)
 viewContents model =
-    List.map (\f -> f model) [ sessionCard, playerCard, mediaCard ]
+    case model.page of
+        Caster ->
+            List.map (\f -> f model) [ sessionCard, playerCard, mediaCard ]
+
+        About ->
+            List.singleton <| Markdown.toHtml [] """
+## About
+
+This page makes use of the Chromecast sender API to control Chromecasts on your local network. It provides a web interface rather than requiring you to install a native app on your devices. Links you load are accessed directly by the Chromecast.
+
+I made this page because I was annoyed at how invasive Chromecast support can be. It currently requires integrating Chromecast libraries into every application that wants to interoperate. Screen mirroring is a partial solution that doesn't require individual app support, by including the integration at the device-level, but comes with security and privacy issues, and is very inefficient. Data is first streamed to your device, and then streamed on to the Chromecast, requiring double the bandwidth or more than just streaming directly to the Chromecast.
+
+This site only serves code to control your Chromecasts. There is no communication of what you are watching required to any server, other than the one your Chromecast accesses to retrieve the content. Links directly to content, from other websites, encode the content in the fragment part of the URL, which is not sent in requests to this site.
+"""
+
+        Dev ->
+            List.singleton <| Markdown.toHtml [] """
+## Developers
+
+You can link to this site and automatically fill the proposed media URLs by including a fragment in the link. A fragment is the part after a <code>#</code> in URL. For example <a href="/#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4"><code>https://chromecast.link#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4</code></a>
+
+The valid fragment parameters are:
+<dl>
+  <dt>content</dt>
+  <dd>URL of content to send to the Chromecast. Must be a supported format like MP4, WebM, Ogg etc.</dd>
+  <dt>title</dt>
+  <dd>This is the title to show on the loading and pause screens.</dd>
+  <dt>poster</dt>
+  <dd>A thumbnail image to show that represents the content.</dd>
+  <dt>subtitle</dt>
+  <dd>Smaller text that appears below the title.</dd>
+  <dt>subtitles</dt>
+  <dd>URL for subtitles for the content. I think it must be WebVTT format.</dd>
+</dl>
+"""
 
 
 sessionCard : Model -> Html Msg
@@ -737,6 +796,9 @@ mainUpdate msg model =
 
         MediaLoaded _ ->
             ( { model | loadingMedia = False }, Cmd.none )
+
+        SetPage page ->
+            ( { model | page = page }, Cmd.none )
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
