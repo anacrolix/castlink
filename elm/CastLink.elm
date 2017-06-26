@@ -175,8 +175,11 @@ view model =
                     --[ navItem Caster "Link caster"
                     [ navItem About "About"
                     , navItem Dev "Use on your website"
+                    , Navbar.itemLink [ href "https://www.patreon.com/bePatron?u=6126463" ] [ Html.text "Become a Patron!" ]
                     ]
-                |> Navbar.view model.navbarState
+                --|> Navbar.customItems [ Navbar.customItem <| div [ innerHtml """<a href="https://www.patreon.com/bePatron?u=6126463" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>""" ] [] ]
+                |>
+                    Navbar.view model.navbarState
             ]
                 ++ viewContents model
                 ++ viewFooter model
@@ -833,4 +836,9 @@ adBlob =
 
 ad : Html msg
 ad =
-    div [ property "innerHTML" <| Json.Encode.string adBlob ] []
+    div [ innerHtml adBlob ] []
+
+
+innerHtml : String -> Html.Attribute msg
+innerHtml =
+    property "innerHTML" << Json.Encode.string
