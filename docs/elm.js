@@ -16259,20 +16259,23 @@ var _user$project$Query$first = F2(
 			A2(_elm_lang$core$Dict$get, key, query));
 	});
 
+var _user$project$CastLink$innerHtml = function (_p0) {
+	return A2(
+		_elm_lang$html$Html_Attributes$property,
+		'innerHTML',
+		_elm_lang$core$Json_Encode$string(_p0));
+};
 var _user$project$CastLink$adBlob = _elm_lang$core$String$trim('\n<script async src=\"//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js\"></script>\n<ins class=\"adsbygoogle\"\n style=\"display:block\"\n data-ad-client=\"ca-pub-5195063250458873\"\n data-ad-slot=\"4804343597\"\n data-ad-format=\"auto\"></ins>\n<script>\n(adsbygoogle = window.adsbygoogle || []).push({});\n</script>\n');
 var _user$project$CastLink$ad = A2(
 	_elm_lang$html$Html$div,
 	{
 		ctor: '::',
-		_0: A2(
-			_elm_lang$html$Html_Attributes$property,
-			'innerHTML',
-			_elm_lang$core$Json_Encode$string(_user$project$CastLink$adBlob)),
+		_0: _user$project$CastLink$innerHtml(_user$project$CastLink$adBlob),
 		_1: {ctor: '[]'}
 	},
 	{ctor: '[]'});
 var _user$project$CastLink$setOptions = F2(
-	function (_p0, model) {
+	function (_p1, model) {
 		return (model.api.loaded && (!model.setOptions)) ? {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
@@ -16291,18 +16294,18 @@ var _user$project$CastLink$setOptions = F2(
 var _user$project$CastLink$chainUpdates = F3(
 	function (msg, model, updates) {
 		var merge = F2(
-			function (update, _p1) {
-				var _p2 = _p1;
-				var _p3 = A2(update, msg, _p2._0);
-				var nextModel = _p3._0;
-				var nextCmd = _p3._1;
+			function (update, _p2) {
+				var _p3 = _p2;
+				var _p4 = A2(update, msg, _p3._0);
+				var nextModel = _p4._0;
+				var nextCmd = _p4._1;
 				return {
 					ctor: '_Tuple2',
 					_0: nextModel,
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						{
 							ctor: '::',
-							_0: _p2._1,
+							_0: _p3._1,
 							_1: {
 								ctor: '::',
 								_0: nextCmd,
@@ -16319,12 +16322,12 @@ var _user$project$CastLink$chainUpdates = F3(
 	});
 var _user$project$CastLink$contextAlerts = function (model) {
 	var api = model.api;
-	var _p4 = api.loaded;
-	if (_p4 === true) {
-		var _p5 = api.error;
-		if (_p5.ctor === 'Just') {
+	var _p5 = api.loaded;
+	if (_p5 === true) {
+		var _p6 = api.error;
+		if (_p6.ctor === 'Just') {
 			return _elm_lang$core$Maybe$Just(
-				A3(_user$project$Bootstrap$simpleAlert, _user$project$Bootstrap$Danger, _p5._0, 'You may need to use Chrome, or an Android device.'));
+				A3(_user$project$Bootstrap$simpleAlert, _user$project$Bootstrap$Danger, _p6._0, 'You may need to use Chrome, or an Android device.'));
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
 		}
@@ -16423,35 +16426,35 @@ var _user$project$CastLink$traceDecoder = function (decoder) {
 	return A2(
 		_elm_lang$core$Json_Decode$andThen,
 		function (value) {
-			var _p6 = A2(_elm_lang$core$Json_Decode$decodeValue, decoder, value);
-			if (_p6.ctor === 'Ok') {
+			var _p7 = A2(_elm_lang$core$Json_Decode$decodeValue, decoder, value);
+			if (_p7.ctor === 'Ok') {
 				return _elm_lang$core$Json_Decode$succeed(
-					A2(_elm_lang$core$Debug$log, 'herp', _p6._0));
+					A2(_elm_lang$core$Debug$log, 'herp', _p7._0));
 			} else {
 				return _elm_lang$core$Json_Decode$fail(
-					A2(_elm_lang$core$Debug$log, 'error', _p6._0));
+					A2(_elm_lang$core$Debug$log, 'error', _p7._0));
 			}
 		},
 		_elm_lang$core$Json_Decode$value);
 };
 var _user$project$CastLink$secsToHhmmss = function (s) {
-	var extract = function (_p7) {
-		var _p8 = _p7;
-		var _p10 = _p8._0;
-		var _p9 = _p8._1;
-		if (_p9.ctor === 'Just') {
-			return A2(_elm_lang$core$Basics_ops['%'], (s / _p10) | 0, _p9._0);
+	var extract = function (_p8) {
+		var _p9 = _p8;
+		var _p11 = _p9._0;
+		var _p10 = _p9._1;
+		if (_p10.ctor === 'Just') {
+			return A2(_elm_lang$core$Basics_ops['%'], (s / _p11) | 0, _p10._0);
 		} else {
-			return (s / _p10) | 0;
+			return (s / _p11) | 0;
 		}
 	};
-	var format = function (_p11) {
+	var format = function (_p12) {
 		return A3(
 			_elm_lang$core$String$padLeft,
 			2,
 			_elm_lang$core$Native_Utils.chr('0'),
 			_elm_lang$core$Basics$toString(
-				extract(_p11)));
+				extract(_p12)));
 	};
 	return A2(
 		_elm_lang$core$String$join,
@@ -16513,9 +16516,9 @@ var _user$project$CastLink$iconAndText = F2(
 var _user$project$CastLink$justList = function () {
 	var f = F2(
 		function (m, l) {
-			var _p12 = m;
-			if (_p12.ctor === 'Just') {
-				return {ctor: '::', _0: _p12._0, _1: l};
+			var _p13 = m;
+			if (_p13.ctor === 'Just') {
+				return {ctor: '::', _0: _p13._0, _1: l};
 			} else {
 				return l;
 			}
@@ -16534,8 +16537,8 @@ var _user$project$CastLink$loadedMedia = function (context) {
 		A2(
 			_elm_lang$core$Maybe$andThen,
 			function (sm) {
-				var _p13 = sm.playerState;
-				if (_p13.ctor === 'Idle') {
+				var _p14 = sm.playerState;
+				if (_p14.ctor === 'Idle') {
 					return _elm_lang$core$Maybe$Nothing;
 				} else {
 					return _elm_lang$core$Maybe$Just(sm);
@@ -16567,19 +16570,19 @@ var _user$project$CastLink$cardHeader = function (s) {
 };
 var _user$project$CastLink$voidHref = _elm_lang$html$Html_Attributes$href('javascript:void(0)');
 var _user$project$CastLink$maybeToList = function (maybe) {
-	var _p14 = maybe;
-	if (_p14.ctor === 'Just') {
-		return _elm_lang$core$List$singleton(_p14._0);
+	var _p15 = maybe;
+	if (_p15.ctor === 'Just') {
+		return _elm_lang$core$List$singleton(_p15._0);
 	} else {
 		return {ctor: '[]'};
 	}
 };
 var _user$project$CastLink$parseQuerySpec = function (query) {
-	var decode = function (_p15) {
+	var decode = function (_p16) {
 		return A2(
 			_elm_lang$core$Maybe$withDefault,
 			'',
-			_elm_lang$http$Http$decodeUri(_p15));
+			_elm_lang$http$Http$decodeUri(_p16));
 	};
 	var specQuery = _user$project$Query$parseQuery(query);
 	var first_ = function (key) {
@@ -16601,7 +16604,7 @@ var _user$project$CastLink$parseQuerySpec = function (query) {
 			_user$project$CastLink$justList(
 				A2(_user$project$Query$all, key, specQuery)));
 	};
-	var _p16 = A2(_elm_lang$core$Debug$log, 'query', query);
+	var _p17 = A2(_elm_lang$core$Debug$log, 'query', query);
 	return A2(
 		_elm_lang$core$Debug$log,
 		'query spec',
@@ -16619,26 +16622,26 @@ var _user$project$CastLink$locationMediaSpec = function (loc) {
 };
 var _user$project$CastLink$mainUpdate = F2(
 	function (msg, model) {
-		var _p17 = msg;
-		switch (_p17.ctor) {
+		var _p18 = msg;
+		switch (_p18.ctor) {
 			case 'ApiAvailability':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{api: _p17._0}),
+						{api: _p18._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'CastContext':
-				var _p19 = _p17._0;
-				var _p18 = A2(_elm_lang$core$Debug$log, 'cast context', _p19);
+				var _p20 = _p18._0;
+				var _p19 = A2(_elm_lang$core$Debug$log, 'cast context', _p20);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
 							context: _elm_lang$core$Maybe$Just(
-								_user$project$Cast$fromJsContext(_p19))
+								_user$project$Cast$fromJsContext(_p20))
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16650,31 +16653,31 @@ var _user$project$CastLink$mainUpdate = F2(
 						{ctor: '_Tuple0'})
 				};
 			case 'UrlChange':
-				var _p21 = _p17._0;
-				var _p20 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p21);
+				var _p22 = _p18._0;
+				var _p21 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p22);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							proposedMedia: _user$project$CastLink$locationMediaSpec(_p21)
+							proposedMedia: _user$project$CastLink$locationMediaSpec(_p22)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Navigate':
-				var _p23 = _p17._0;
-				var _p22 = A2(_elm_lang$core$Debug$log, 'Navigate', _p23);
+				var _p24 = _p18._0;
+				var _p23 = A2(_elm_lang$core$Debug$log, 'Navigate', _p24);
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: _elm_lang$navigation$Navigation$newUrl(_p23)
+					_1: _elm_lang$navigation$Navigation$newUrl(_p24)
 				};
 			case 'NavbarMsg':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{navbarState: _p17._0}),
+						{navbarState: _p18._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'LoadMedia':
@@ -16691,7 +16694,7 @@ var _user$project$CastLink$mainUpdate = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							proposedMedia: A2(_p17._0, model.proposedMedia, _p17._1)
+							proposedMedia: A2(_p18._0, model.proposedMedia, _p18._1)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16700,14 +16703,14 @@ var _user$project$CastLink$mainUpdate = F2(
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _user$project$Cast$controlPlayer(
-						_user$project$Cast$toJsPlayerAction(_p17._0))
+						_user$project$Cast$toJsPlayerAction(_p18._0))
 				};
 			case 'ProgressClicked':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: function () {
-						var _p24 = A2(
+						var _p25 = A2(
 							_elm_lang$core$Maybe$andThen,
 							function (_) {
 								return _.duration;
@@ -16723,27 +16726,27 @@ var _user$project$CastLink$mainUpdate = F2(
 										return _.session;
 									},
 									model.context)));
-						if (_p24.ctor === 'Just') {
+						if (_p25.ctor === 'Just') {
 							return _user$project$Cast$controlPlayer(
 								_user$project$Cast$toJsPlayerAction(
-									_user$project$Cast$Seek(_p17._0 * _p24._0)));
+									_user$project$Cast$Seek(_p18._0 * _p25._0)));
 						} else {
 							return _elm_lang$core$Platform_Cmd$none;
 						}
 					}()
 				};
 			case 'RunCmd':
-				return {ctor: '_Tuple2', _0: model, _1: _p17._0};
+				return {ctor: '_Tuple2', _0: model, _1: _p18._0};
 			case 'Update':
-				return _p17._0(model);
+				return _p18._0(model);
 			case 'MouseoverProgress':
-				var _p25 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
+				var _p26 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							progressHover: _elm_lang$core$Maybe$Just(_p17._0)
+							progressHover: _elm_lang$core$Maybe$Just(_p18._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -16760,14 +16763,14 @@ var _user$project$CastLink$mainUpdate = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{page: _p17._0}),
+						{page: _p18._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
 	});
 var _user$project$CastLink$update = F2(
 	function (msg, model) {
-		var _p26 = A2(_elm_lang$core$Debug$log, 'update', msg);
+		var _p27 = A2(_elm_lang$core$Debug$log, 'update', msg);
 		return A3(
 			_user$project$CastLink$chainUpdates,
 			msg,
@@ -16925,9 +16928,9 @@ var _user$project$CastLink$progress = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												function (_p27) {
+												function (_p28) {
 													return _user$project$CastLink$secsToHhmmss(
-														_elm_lang$core$Basics$floor(_p27));
+														_elm_lang$core$Basics$floor(_p28));
 												}(media.currentTime)),
 											_1: {ctor: '[]'}
 										}),
@@ -16948,9 +16951,9 @@ var _user$project$CastLink$progress = function (model) {
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html$text(
-													function (_p28) {
+													function (_p29) {
 														return _user$project$CastLink$secsToHhmmss(
-															_elm_lang$core$Basics$floor(_p28));
+															_elm_lang$core$Basics$floor(_p29));
 													}(duration)),
 												_1: {ctor: '[]'}
 											}),
@@ -17016,9 +17019,9 @@ var _user$project$CastLink$playerButtons = function (media) {
 			};
 		});
 	var makeSeekButtons = _elm_lang$core$List$map(
-		function (_p29) {
-			var _p30 = _p29;
-			return A3(seek, media.currentTime + _p30._0, _p30._1, _p30._2);
+		function (_p30) {
+			var _p31 = _p30;
+			return A3(seek, media.currentTime + _p31._0, _p31._1, _p31._2);
 		});
 	var seekBackButtons = makeSeekButtons(
 		{
@@ -17143,8 +17146,8 @@ var _user$project$CastLink$playerButtons = function (media) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						function () {
-							var _p31 = playerState;
-							switch (_p31.ctor) {
+							var _p32 = playerState;
+							switch (_p32.ctor) {
 								case 'Idle':
 									return {
 										ctor: '::',
@@ -17206,7 +17209,7 @@ var _user$project$CastLink$playerCard = function (model) {
 					}
 				})));
 	var contents = function () {
-		var _p32 = A2(
+		var _p33 = A2(
 			_elm_lang$core$Maybe$andThen,
 			function (_) {
 				return _.media;
@@ -17217,14 +17220,14 @@ var _user$project$CastLink$playerCard = function (model) {
 					return _.session;
 				},
 				model.context));
-		if (_p32.ctor === 'Just') {
-			var _p33 = _p32._0;
-			return _elm_lang$core$Native_Utils.eq(_p33.playerState, _user$project$Cast$Idle) ? noMedia : A2(
+		if (_p33.ctor === 'Just') {
+			var _p34 = _p33._0;
+			return _elm_lang$core$Native_Utils.eq(_p34.playerState, _user$project$Cast$Idle) ? noMedia : A2(
 				_elm_lang$core$List$map,
 				_user$project$Bootstrap_Card$custom,
 				{
 					ctor: '::',
-					_0: _user$project$CastLink$playerButtons(_p33),
+					_0: _user$project$CastLink$playerButtons(_p34),
 					_1: function () {
 						var card = function (node) {
 							return _user$project$Bootstrap_Card$view(
@@ -17571,8 +17574,8 @@ var _user$project$CastLink$mediaCard = function (model) {
 		},
 		model.context);
 	var haveSession = function () {
-		var _p34 = session;
-		if (_p34.ctor === 'Just') {
+		var _p35 = session;
+		if (_p35.ctor === 'Just') {
 			return true;
 		} else {
 			return false;
@@ -17683,8 +17686,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					ctor: '::',
 					_0: _elm_lang$core$List$singleton(
 						function () {
-							var _p35 = model.api.loaded;
-							if (_p35 === true) {
+							var _p36 = model.api.loaded;
+							if (_p36 === true) {
 								var alert = function (button) {
 									return _user$project$Bootstrap_Alert$warning(
 										{
@@ -17704,11 +17707,11 @@ var _user$project$CastLink$sessionCard = function (model) {
 											}
 										});
 								};
-								var _p36 = model.context;
-								if (_p36.ctor === 'Just') {
-									var _p38 = _p36._0;
-									var _p37 = _p38.castState;
-									switch (_p37.ctor) {
+								var _p37 = model.context;
+								if (_p37.ctor === 'Just') {
+									var _p39 = _p37._0;
+									var _p38 = _p39.castState;
+									switch (_p38.ctor) {
 										case 'NotConnected':
 											return alert(
 												A4(
@@ -17768,7 +17771,7 @@ var _user$project$CastLink$sessionCard = function (model) {
 																					function (_) {
 																						return _.deviceName;
 																					},
-																					_p38.session))),
+																					_p39.session))),
 																		_1: {ctor: '[]'}
 																	}),
 																_1: {
@@ -17894,8 +17897,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					{ctor: '[]'}))));
 };
 var _user$project$CastLink$viewContents = function (model) {
-	var _p39 = model.page;
-	switch (_p39.ctor) {
+	var _p40 = model.page;
+	switch (_p40.ctor) {
 		case 'Caster':
 			return A2(
 				_elm_lang$core$List$map,
@@ -17926,7 +17929,7 @@ var _user$project$CastLink$viewContents = function (model) {
 				A2(
 					_evancz$elm_markdown$Markdown$toHtml,
 					{ctor: '[]'},
-					'\n## Developers\n\nYou can link to this site and automatically fill the proposed media URLs by including a fragment in the link. A fragment is the part after a <code>#</code> in URL. For example <a href=\"/#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4\"><code>https://chromecast.link#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4</code></a>\n\nThe valid fragment parameters are:\n<dl>\n  <dt>content</dt>\n  <dd>URL of content to send to the Chromecast. Must be a supported format like MP4, WebM, Ogg etc.</dd>\n  <dt>title</dt>\n  <dd>This is the title to show on the loading and pause screens.</dd>\n  <dt>poster</dt>\n  <dd>A thumbnail image to show that represents the content.</dd>\n  <dt>subtitle</dt>\n  <dd>Smaller text that appears below the title.</dd>\n  <dt>subtitles</dt>\n  <dd>URL for subtitles for the content. I think it must be WebVTT format.</dd>\n</dl>\n'));
+					'\n## Developers\n\nYou can link to this site and automatically fill the proposed media URLs by including a fragment in the link. A fragment is the part after a <code>#</code> in URL. For example <code>https://chromecast.link#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4</code>\n\nThe valid fragment parameters are:\n<dl>\n  <dt>content</dt>\n  <dd>URL of content to send to the Chromecast. Must be a supported format like MP4, WebM, Ogg etc.</dd>\n  <dt>title</dt>\n  <dd>This is the title to show on the loading and pause screens.</dd>\n  <dt>poster</dt>\n  <dd>A thumbnail image to show that represents the content.</dd>\n  <dt>subtitle</dt>\n  <dd>Smaller text that appears below the title.</dd>\n  <dt>subtitles</dt>\n  <dd>URL for subtitles for the content. I think it must be WebVTT format.</dd>\n</dl>\n'));
 	}
 };
 var _user$project$CastLink$CastContext = function (a) {
@@ -17955,10 +17958,10 @@ var _user$project$CastLink$Dev = {ctor: 'Dev'};
 var _user$project$CastLink$About = {ctor: 'About'};
 var _user$project$CastLink$Caster = {ctor: 'Caster'};
 var _user$project$CastLink$init = function (location) {
-	var _p40 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
-	var navbarState = _p40._0;
-	var navbarCmd = _p40._1;
-	var _p41 = A2(_elm_lang$core$Debug$log, 'init location', location);
+	var _p41 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
+	var navbarState = _p41._0;
+	var navbarCmd = _p41._1;
+	var _p42 = A2(_elm_lang$core$Debug$log, 'init location', location);
 	return {
 		ctor: '_Tuple2',
 		_0: {
@@ -18014,7 +18017,22 @@ var _user$project$CastLink$view = function (model) {
 							_1: {
 								ctor: '::',
 								_0: A2(navItem, _user$project$CastLink$Dev, 'Use on your website'),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_user$project$Bootstrap_Navbar$itemLink,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$href('https://www.patreon.com/bePatron?u=6126463'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Become a Patron!'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
 							}
 						},
 						_user$project$Bootstrap_Navbar$inverse(
