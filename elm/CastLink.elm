@@ -273,7 +273,7 @@ sessionCard model =
                                                 NoDevicesAvailable ->
                                                     Alert.danger <|
                                                         [ strong [] [ text "No receiver devices available." ]
-                                                        , text "There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                        , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
                                                         ]
 
                                         Nothing ->
