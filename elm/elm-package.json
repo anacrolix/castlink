@@ -5,7 +5,8 @@
     "license": "BSD3",
     "source-directories": [
         ".",
-        "elm-bootstrap/src"
+        "elm-bootstrap/src",
+        "../../html-escape-sequences/src"
     ],
     "exposed-modules": [],
     "dependencies": {

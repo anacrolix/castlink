@@ -23,6 +23,7 @@ import String
 import Http
 import Query exposing (..)
 import Markdown
+import Unicode
 
 
 main : Program Never Model Msg
@@ -254,7 +255,11 @@ sessionCard model =
 
                                                 Connected ->
                                                     Alert.success <|
-                                                        [ p [] [ text "Connected to ", strong [] [ text <| withDefault "" <| Maybe.map .deviceName context.session ], text "." ]
+                                                        [ p []
+                                                            [ text "Connected to "
+                                                            , strong [] [ text <| withDefault "" <| Maybe.map (.deviceName >> Unicode.unEsc) context.session ]
+                                                            , text "."
+                                                            ]
                                                         , Button.button
                                                             [ Button.warning
                                                             , Button.onClick <| RunCmd <| Cast.endCurrentSession False
