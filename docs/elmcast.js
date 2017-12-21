@@ -2,12 +2,12 @@ var gCastApiAvailable = new Promise((resolve, reject) => {
 	window['__onGCastApiAvailable'] =
 		(loaded, error) => {
 			console.log('resolving __onGCastApiAvailable', loaded, error)
-			if (!error) error = null
-			resolve({loaded, error})
-		}
+			if (!error) error = null;
+			resolve({loaded, error});
+		};
 });
 function context() {
-	return cast.framework.CastContext.getInstance()
+	return cast.framework.CastContext.getInstance();
 }
 function session() {
 		return context() && context().getCurrentSession();
@@ -16,7 +16,7 @@ function ifTrue(value, onTrue) {
 	if (!value) return value;
 	return onTrue(value);
 }
-var app = Elm.CastLink.fullscreen()
+var app = Elm.CastLink.fullscreen();
 function elmCastContext(c) {
 	return {
 		castState: c.getCastState(),
@@ -45,12 +45,12 @@ function elmCastContext(c) {
 				deviceName: s.getCastDevice().friendlyName,
 			}
 		})(c.getCurrentSession())
-	}
+	};
 }
 function sendContext() {
-	const c = elmCastContext(context())
-	console.log('sending context', c)
-	app.ports.context.send(c)
+	const c = elmCastContext(context());
+	console.log('sending context', c);
+	app.ports.context.send(c);
 }
 function initRemotePlayer() {
 	rp = new cast.framework.RemotePlayer();
@@ -66,12 +66,12 @@ gCastApiAvailable.then(value => {
 	app.ports.onGCastApiAvailability.send(value)
 	context().addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, sendContext);
 	context().addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, sendContext);
-	initRemotePlayer()
-	sendContext()
+	initRemotePlayer();
+	sendContext();
 })
 app.ports.setOptions.subscribe(options => {
-	console.log('setting options', options)
-	cast.framework.CastContext.getInstance().setOptions(options)
+	console.log('setting options', options);
+	cast.framework.CastContext.getInstance().setOptions(options);
 })
 app.ports.requestSession.subscribe(() => {
 	context().requestSession().then(result => {
@@ -117,7 +117,7 @@ app.ports.loadMedia.subscribe(spec => {
 		console.log('error loading media', e);
 		sendMediaLoaded(e);
 	});
-})
+});
 app.ports.controlPlayer.subscribe(action => {
 	const rp = new cast.framework.RemotePlayer();
 	const rpc = new cast.framework.RemotePlayerController(rp);
@@ -136,5 +136,5 @@ app.ports.endCurrentSession.subscribe(stopCasting => {
 	context().endCurrentSession(stopCasting);
 });
 function sendMediaLoaded(e) {
-	app.ports.mediaLoaded.send(e)
+	app.ports.mediaLoaded.send(e);
 }
