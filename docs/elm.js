@@ -15982,7 +15982,7 @@ var _user$project$Cast$exampleMedia = {
 	subtitles: {ctor: '[]'}
 };
 var _user$project$Cast$apiNotLoaded = {loaded: false, error: _elm_lang$core$Maybe$Nothing};
-var _user$project$Cast$originScoped = 'ORIGIN_SCOPED';
+var _user$project$Cast$originScoped = 'origin_scoped';
 var _user$project$Cast$defaultOptions = {autoJoinPolicy: _user$project$Cast$originScoped, language: _elm_lang$core$Maybe$Nothing, receiverApplicationId: _elm_lang$core$Maybe$Nothing, resumeSavedSession: true};
 var _user$project$Cast$emptyPlayerAction = {playOrPause: false, seek: _elm_lang$core$Maybe$Nothing, stop: false};
 var _user$project$Cast$toJsPlayerAction = function (pa) {

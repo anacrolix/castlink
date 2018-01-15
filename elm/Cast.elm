@@ -185,7 +185,7 @@ type alias AutoJoinPolicy =
 
 originScoped : AutoJoinPolicy
 originScoped =
-    "ORIGIN_SCOPED"
+    "origin_scoped"
 
 
 type alias Options =
