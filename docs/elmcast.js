@@ -16,6 +16,10 @@ function ifTrue(value, onTrue) {
 	if (!value) return value;
 	return onTrue(value);
 }
+function undefinedToNull(value) {
+	if (value === undefined) return null;
+	return value;
+}
 var app = Elm.CastLink.fullscreen();
 function elmCastContext(c) {
 	return {
@@ -26,7 +30,7 @@ function elmCastContext(c) {
 				state: s.getSessionState(),
 				media: ifTrue(s.getMediaSession(), m => {
 					return {
-						duration: m.media.duration,
+						duration: undefinedToNull(m.media.duration),
 						currentTime: m.getEstimatedTime(),
 						playerState: m.playerState,
 						spec: (() => {
@@ -34,7 +38,7 @@ function elmCastContext(c) {
 							const md = mi.metadata;
 							return {
 								url: m.media.contentId,
-								subtitles: mi.tracks.map(t => t.trackContentId),
+								subtitles: ifTrue(mi.tracks, ts => ts.filter(t => typeof t.trackContentId == 'string').map(t => t.trackContentId)),
 								poster: md.images[0].url,
 								title: md.title,
 								subtitle: md.subtitle,
