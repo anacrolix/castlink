@@ -455,7 +455,7 @@ playerButtons media =
             media.playerState
 
         buffering =
-            ( [ Button.info, Button.disabled True ], iconAndText [ "pulse", "spinner" ] "Buffering" )
+            ( [ Button.info, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "pulse", "spinner" ] "Buffering" )
 
         pause =
             ( [ Button.warning, Button.onClick <| ClickedPlayerControl Cast.PlayOrPause ], iconAndText [ "pause" ] "Pause" )
