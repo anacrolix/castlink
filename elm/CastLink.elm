@@ -669,11 +669,11 @@ viewFooter model =
     , p [ class "text-muted small text-center" ]
         [ a
             [ class "text-muted"
-            , href "mailto:anacrolix@gmail.com"
+            , href <| "mailto:" ++ email
             ]
             [ text "Questions, suggestions, support: "
             , span [ class "small glyphicon glyphicon-envelope" ] []
-            , text "anacrolix@gmail.com"
+            , text email
             ]
         ]
     , ad
@@ -847,3 +847,7 @@ ad =
 innerHtml : String -> Html.Attribute msg
 innerHtml =
     property "innerHTML" << Json.Encode.string
+
+
+email =
+    "anacrolix+chromecast.link@gmail.com"

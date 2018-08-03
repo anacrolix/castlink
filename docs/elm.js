@@ -16607,6 +16607,7 @@ var _user$project$Unicode$text_ = function (_p0) {
 };
 var _user$project$Unicode$txt = _user$project$Unicode$text_;
 
+var _user$project$CastLink$email = 'anacrolix+chromecast.link@gmail.com';
 var _user$project$CastLink$innerHtml = function (_p0) {
 	return A2(
 		_elm_lang$html$Html_Attributes$property,
@@ -16709,7 +16710,8 @@ var _user$project$CastLink$viewFooter = function (model) {
 							_0: _elm_lang$html$Html_Attributes$class('text-muted'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$href('mailto:anacrolix@gmail.com'),
+								_0: _elm_lang$html$Html_Attributes$href(
+									A2(_elm_lang$core$Basics_ops['++'], 'mailto:', _user$project$CastLink$email)),
 								_1: {ctor: '[]'}
 							}
 						},
@@ -16728,7 +16730,7 @@ var _user$project$CastLink$viewFooter = function (model) {
 									{ctor: '[]'}),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text('anacrolix@gmail.com'),
+									_0: _elm_lang$html$Html$text(_user$project$CastLink$email),
 									_1: {ctor: '[]'}
 								}
 							}
@@ -17461,7 +17463,8 @@ var _user$project$CastLink$playerButtons = function (media) {
 			_0: _user$project$Bootstrap_Button$info,
 			_1: {
 				ctor: '::',
-				_0: _user$project$Bootstrap_Button$disabled(true),
+				_0: _user$project$Bootstrap_Button$onClick(
+					_user$project$CastLink$ClickedPlayerControl(_user$project$Cast$PlayOrPause)),
 				_1: {ctor: '[]'}
 			}
 		},
