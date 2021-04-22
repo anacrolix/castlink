@@ -3,6 +3,7 @@ module Query exposing (..)
 import Dict exposing (..)
 import List exposing (..)
 
+
 type alias Query =
     Dict String (List (Maybe String))
 
@@ -50,9 +51,9 @@ parseQuery query =
                     Just list ->
                         new :: list
     in
-        pairs
-            |> List.foldr
-                (\( key, value ) ->
-                    Dict.update key <| update value
-                )
-                Dict.empty
+    pairs
+        |> List.foldr
+            (\( key, value ) ->
+                Dict.update key <| update value
+            )
+            Dict.empty

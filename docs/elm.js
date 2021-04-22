@@ -16362,8 +16362,8 @@ var _user$project$Query$parseQuery = function (query) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Query',
 					{
-						start: {line: 31, column: 21},
-						end: {line: 39, column: 75}
+						start: {line: 32, column: 21},
+						end: {line: 40, column: 75}
 					},
 					_p1)('String.split returned empty list');
 			}

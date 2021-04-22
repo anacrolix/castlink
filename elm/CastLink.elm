@@ -1,28 +1,28 @@
 module CastLink exposing (..)
 
+import Bootstrap exposing (..)
+import Bootstrap.Alert as Alert
+import Bootstrap.Button as Button
+import Bootstrap.Card as Card
+import Bootstrap.Form as Form
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.Textarea as Textarea
+import Bootstrap.Grid as Grid
+import Bootstrap.Navbar as Navbar
+import Cast exposing (..)
 import Debug exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Http
+import Json.Decode as JD exposing (..)
 import Json.Encode
 import List exposing (..)
-import Cast exposing (..)
-import Bootstrap exposing (..)
-import Navigation exposing (..)
-import Bootstrap.Alert as Alert
-import Bootstrap.Grid as Grid
-import Bootstrap.Navbar as Navbar
-import Bootstrap.Card as Card
-import Bootstrap.Button as Button
-import Bootstrap.Form as Form
-import Bootstrap.Form.Input as Input
-import Json.Decode as JD exposing (..)
-import Bootstrap.Form.Textarea as Textarea
-import Maybe exposing (..)
-import String
-import Http
-import Query exposing (..)
 import Markdown
+import Maybe exposing (..)
+import Navigation exposing (..)
+import Query exposing (..)
+import String
 import Unicode
 
 
@@ -80,17 +80,17 @@ init location =
         ( navbarState, navbarCmd ) =
             Navbar.initialState NavbarMsg
     in
-        ( { api = Cast.apiNotLoaded
-          , setOptions = False
-          , context = Nothing
-          , navbarState = navbarState
-          , proposedMedia = locationMediaSpec location
-          , progressHover = Nothing
-          , loadingMedia = False
-          , page = Caster
-          }
-        , navbarCmd
-        )
+    ( { api = Cast.apiNotLoaded
+      , setOptions = False
+      , context = Nothing
+      , navbarState = navbarState
+      , proposedMedia = locationMediaSpec location
+      , progressHover = Nothing
+      , loadingMedia = False
+      , page = Caster
+      }
+    , navbarCmd
+    )
 
 
 locationMediaSpec : Location -> Cast.Media
@@ -122,13 +122,13 @@ parseQuerySpec query =
         all_ key =
             specQuery |> Query.all key |> justList |> List.map decode
     in
-        Debug.log "query spec" <|
-            Cast.Media
-                (first_ "content")
-                (first_ "title")
-                (first_ "subtitle")
-                (first_ "poster")
-                (all_ "subtitles")
+    Debug.log "query spec" <|
+        Cast.Media
+            (first_ "content")
+            (first_ "title")
+            (first_ "subtitle")
+            (first_ "poster")
+            (all_ "subtitles")
 
 
 subscriptions : Model -> Sub Msg
@@ -163,27 +163,27 @@ view model =
                 maker =
                     if model.page == page then
                         Navbar.itemLinkActive
+
                     else
                         Navbar.itemLink
             in
-                maker [ voidHref, onClick <| SetPage page ] [ Html.text text ]
+            maker [ voidHref, onClick <| SetPage page ] [ Html.text text ]
     in
-        Grid.container [] <|
-            [ Navbar.config NavbarMsg
-                |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
-                |> Navbar.inverse
-                |> Navbar.items
-                    --[ navItem Caster "Link caster"
-                    [ navItem About "About"
-                    , navItem Dev "Use on your website"
-                    , Navbar.itemLink [ href "https://www.patreon.com/bePatron?u=6126463" ] [ Html.text "Become a Patron!" ]
-                    ]
-                --|> Navbar.customItems [ Navbar.customItem <| div [ innerHtml """<a href="https://www.patreon.com/bePatron?u=6126463" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>""" ] [] ]
-                |>
-                    Navbar.view model.navbarState
-            ]
-                ++ viewContents model
-                ++ viewFooter model
+    Grid.container [] <|
+        [ Navbar.config NavbarMsg
+            |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
+            |> Navbar.inverse
+            |> Navbar.items
+                --[ navItem Caster "Link caster"
+                [ navItem About "About"
+                , navItem Dev "Use on your website"
+                , Navbar.itemLink [ href "https://www.patreon.com/bePatron?u=6126463" ] [ Html.text "Become a Patron!" ]
+                ]
+            --|> Navbar.customItems [ Navbar.customItem <| div [ innerHtml """<a href="https://www.patreon.com/bePatron?u=6126463" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>""" ] [] ]
+            |> Navbar.view model.navbarState
+        ]
+            ++ viewContents model
+            ++ viewFooter model
 
 
 cardHeader : String -> Card.Config Msg -> Card.Config Msg
@@ -242,56 +242,56 @@ sessionCard model =
                             True ->
                                 let
                                     alert button =
-                                        Alert.warning <| (p [] [ text "Not connected to a device." ]) :: [ button ]
+                                        Alert.warning <| p [] [ text "Not connected to a device." ] :: [ button ]
                                 in
-                                    case model.context of
-                                        Just context ->
-                                            case context.castState of
-                                                NotConnected ->
-                                                    alert <| Bootstrap.button Primary (Just "sign-in") [ onClick RequestSession ] "Connect"
+                                case model.context of
+                                    Just context ->
+                                        case context.castState of
+                                            NotConnected ->
+                                                alert <| Bootstrap.button Primary (Just "sign-in") [ onClick RequestSession ] "Connect"
 
-                                                Connecting ->
-                                                    alert <| Button.button [ Button.info ] <| iconAndText [ "pulse", "spinner" ] "Connecting"
+                                            Connecting ->
+                                                alert <| Button.button [ Button.info ] <| iconAndText [ "pulse", "spinner" ] "Connecting"
 
-                                                Connected ->
-                                                    Alert.success <|
-                                                        [ p []
-                                                            [ text "Connected to "
-                                                            , strong [] [ text <| withDefault "" <| Maybe.map (.deviceName >> Unicode.unEsc) context.session ]
-                                                            , text "."
-                                                            ]
-                                                        , Button.button
-                                                            [ Button.warning
-                                                            , Button.onClick <| RunCmd <| Cast.endCurrentSession False
-                                                            ]
-                                                          <|
-                                                            iconAndText [ "sign-out" ] "Leave"
-                                                        , text " "
-                                                        , Button.button
-                                                            [ Button.danger
-                                                            , Button.onClick <| RunCmd <| Cast.endCurrentSession True
-                                                            ]
-                                                          <|
-                                                            iconAndText [ "trash" ] "Stop"
+                                            Connected ->
+                                                Alert.success <|
+                                                    [ p []
+                                                        [ text "Connected to "
+                                                        , strong [] [ text <| withDefault "" <| Maybe.map (.deviceName >> Unicode.unEsc) context.session ]
+                                                        , text "."
                                                         ]
-
-                                                NoDevicesAvailable ->
-                                                    Alert.danger <|
-                                                        [ strong [] [ text "No receiver devices available." ]
-                                                        , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                    , Button.button
+                                                        [ Button.warning
+                                                        , Button.onClick <| RunCmd <| Cast.endCurrentSession False
                                                         ]
+                                                      <|
+                                                        iconAndText [ "sign-out" ] "Leave"
+                                                    , text " "
+                                                    , Button.button
+                                                        [ Button.danger
+                                                        , Button.onClick <| RunCmd <| Cast.endCurrentSession True
+                                                        ]
+                                                      <|
+                                                        iconAndText [ "trash" ] "Stop"
+                                                    ]
 
-                                        Nothing ->
-                                            Alert.warning <| List.singleton <| p [] [ text "Context state unknown" ]
+                                            NoDevicesAvailable ->
+                                                Alert.danger <|
+                                                    [ strong [] [ text "No receiver devices available." ]
+                                                    , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                    ]
+
+                                    Nothing ->
+                                        Alert.warning <| List.singleton <| p [] [ text "Context state unknown" ]
 
                             False ->
                                 Alert.warning [ p [] [ text "Cast API not loaded." ] ]
                     ]
     in
-        Card.config []
-            |> cardHeader "Session"
-            |> Card.block [] contents
-            |> Card.view
+    Card.config []
+        |> cardHeader "Session"
+        |> Card.block [] contents
+        |> Card.view
 
 
 relatedButtons : List (Html Msg) -> List (Html Msg)
@@ -342,6 +342,7 @@ mediaCard model =
             <|
                 if model.loadingMedia then
                     iconAndText [ "pulse", "spinner" ] "Loading"
+
                 else
                     iconAndText [ "external-link" ] "Load into Player"
 
@@ -374,56 +375,56 @@ mediaCard model =
                     pm =
                         model.proposedMedia
                 in
-                    [ Form.group []
-                        [ Form.label [] [ text "Title" ]
-                        , Input.text
-                            [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
-                            , Input.value pm.title
-                            ]
-                        ]
-                    , Form.group []
-                        [ Form.label [] [ text "Subtitle" ]
-                        , Input.text
-                            [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
-                            , Input.value pm.subtitle
-                            ]
-                        ]
-                    , Form.group []
-                        [ Form.label [] [ text "Content URL" ]
-                        , Textarea.textarea
-                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
-                            , Textarea.value pm.url
-                            ]
-                        ]
-                    , Form.group []
-                        [ Form.label [] [ text "Subtitles URL" ]
-                        , Textarea.textarea
-                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
-                            , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
-                            ]
-                        ]
-                    , Form.group []
-                        [ Form.label [] [ text "Poster URL" ]
-                        , Textarea.textarea
-                            [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
-                            , Textarea.value pm.poster
-                            ]
+                [ Form.group []
+                    [ Form.label [] [ text "Title" ]
+                    , Input.text
+                        [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
+                        , Input.value pm.title
                         ]
                     ]
+                , Form.group []
+                    [ Form.label [] [ text "Subtitle" ]
+                    , Input.text
+                        [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
+                        , Input.value pm.subtitle
+                        ]
+                    ]
+                , Form.group []
+                    [ Form.label [] [ text "Content URL" ]
+                    , Textarea.textarea
+                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
+                        , Textarea.value pm.url
+                        ]
+                    ]
+                , Form.group []
+                    [ Form.label [] [ text "Subtitles URL" ]
+                    , Textarea.textarea
+                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
+                        , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
+                        ]
+                    ]
+                , Form.group []
+                    [ Form.label [] [ text "Poster URL" ]
+                    , Textarea.textarea
+                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
+                        , Textarea.value pm.poster
+                        ]
+                    ]
+                ]
     in
-        Card.config []
-            |> cardHeader "Media"
-            |> Card.block []
-                (List.map
-                    Card.custom
-                    [ p [] <|
-                        List.intersperse
-                            (text " ")
-                            [ loadButton, setExample, copyLoaded ]
-                    , specForm
-                    ]
-                )
-            |> Card.view
+    Card.config []
+        |> cardHeader "Media"
+        |> Card.block []
+            (List.map
+                Card.custom
+                [ p [] <|
+                    List.intersperse
+                        (text " ")
+                        [ loadButton, setExample, copyLoaded ]
+                , specForm
+                ]
+            )
+        |> Card.view
 
 
 justList : List (Maybe a) -> List a
@@ -437,7 +438,7 @@ justList =
                 Nothing ->
                     l
     in
-        List.foldr f []
+    List.foldr f []
 
 
 iconAndText : List String -> String -> List (Html msg)
@@ -486,24 +487,24 @@ playerButtons media =
                 , ( 120, "fast-forward", "+2m" )
                 ]
     in
-        p [] <|
-            List.intersperse (text " ") <|
-                List.map (uncurry Button.button) <|
-                    seekBackButtons
-                        ++ (case playerState of
-                                Idle ->
-                                    [ play ]
+    p [] <|
+        List.intersperse (text " ") <|
+            List.map (uncurry Button.button) <|
+                seekBackButtons
+                    ++ (case playerState of
+                            Idle ->
+                                [ play ]
 
-                                Playing ->
-                                    [ pause, stop ]
+                            Playing ->
+                                [ pause, stop ]
 
-                                Paused ->
-                                    [ play, stop ]
+                            Paused ->
+                                [ play, stop ]
 
-                                Buffering ->
-                                    [ buffering, stop ]
-                           )
-                        ++ seekForwardButtons
+                            Buffering ->
+                                [ buffering, stop ]
+                       )
+                    ++ seekForwardButtons
 
 
 progress : Model -> Maybe (Html Msg)
@@ -529,7 +530,7 @@ progress model =
                     defaultOptions =
                         Html.Events.defaultOptions
                   in
-                    Html.Events.on "mousemove" <| JD.map MouseoverProgress decodeMouseoverEvent
+                  Html.Events.on "mousemove" <| JD.map MouseoverProgress decodeMouseoverEvent
                 , style [ ( "position", "relative" ) ]
                 ]
             <|
@@ -560,7 +561,7 @@ progress model =
                     )
                 |> Card.view
     in
-        Maybe.map2 card media duration
+    Maybe.map2 card media duration
 
 
 secsToHhmmss : Int -> String
@@ -577,12 +578,12 @@ secsToHhmmss s =
         format =
             String.padLeft 2 '0' << toString << extract
     in
-        String.join ":" <|
-            List.map format
-                [ ( 3600, Nothing )
-                , ( 60, Just 60 )
-                , ( 1, Just 60 )
-                ]
+    String.join ":" <|
+        List.map format
+            [ ( 3600, Nothing )
+            , ( 60, Just 60 )
+            , ( 1, Just 60 )
+            ]
 
 
 traceDecoder : JD.Decoder msg -> JD.Decoder msg
@@ -605,9 +606,9 @@ decodeProgressClick =
         f x w =
             ProgressClicked <| toFloat x / toFloat w
     in
-        JD.map2 f
-            (field "offsetX" JD.int)
-            (at [ "currentTarget", "clientWidth" ] JD.int)
+    JD.map2 f
+        (field "offsetX" JD.int)
+        (at [ "currentTarget", "clientWidth" ] JD.int)
 
 
 decodeMouseoverEvent : JD.Decoder MouseoverEvent
@@ -634,22 +635,24 @@ playerCard model =
                 Just media ->
                     if media.playerState == Idle then
                         noMedia
+
                     else
                         List.map Card.custom <|
                             playerButtons media
-                                :: let
-                                    card node =
-                                        Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
-                                   in
+                                :: (let
+                                        card node =
+                                            Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
+                                    in
                                     justList [ progress model ]
+                                   )
 
                 Nothing ->
                     noMedia
     in
-        Card.config []
-            |> cardHeader "Player"
-            |> Card.block [] contents
-            |> Card.view
+    Card.config []
+        |> cardHeader "Player"
+        |> Card.block [] contents
+        |> Card.view
 
 
 progressHoverPopup : MouseoverEvent -> Html Msg
@@ -686,17 +689,17 @@ contextAlerts model =
         api =
             model.api
     in
-        case api.loaded of
-            True ->
-                case api.error of
-                    Just msg ->
-                        Just <| simpleAlert Danger msg "You may need to use Chrome, or an Android device."
+    case api.loaded of
+        True ->
+            case api.error of
+                Just msg ->
+                    Just <| simpleAlert Danger msg "You may need to use Chrome, or an Android device."
 
-                    Nothing ->
-                        Nothing
+                Nothing ->
+                    Nothing
 
-            False ->
-                Just <| simpleAlert Warning "API not loaded." "Session and player functions not yet available."
+        False ->
+            Just <| simpleAlert Warning "API not loaded." "Session and player functions not yet available."
 
 
 type alias UpdateFn msg model =
@@ -709,7 +712,7 @@ update msg model =
         _ =
             Debug.log "update" msg
     in
-        chainUpdates msg model [ mainUpdate, setOptions ]
+    chainUpdates msg model [ mainUpdate, setOptions ]
 
 
 chainUpdates : msg -> model -> List (UpdateFn msg model) -> ( model, Cmd msg )
@@ -721,9 +724,9 @@ chainUpdates msg model updates =
                     ( nextModel, nextCmd ) =
                         update msg lastModel
                 in
-                    ( nextModel, Cmd.batch [ lastCmd, nextCmd ] )
+                ( nextModel, Cmd.batch [ lastCmd, nextCmd ] )
     in
-        List.foldr merge ( model, Cmd.none ) updates
+    List.foldr merge ( model, Cmd.none ) updates
 
 
 type alias Update model msg =
@@ -748,7 +751,7 @@ mainUpdate msg model =
                 _ =
                     log "cast context" context
             in
-                ( { model | context = Just <| Cast.fromJsContext context }, Cmd.none )
+            ( { model | context = Just <| Cast.fromJsContext context }, Cmd.none )
 
         RequestSession ->
             ( model, Cast.requestSession () )
@@ -758,14 +761,14 @@ mainUpdate msg model =
                 _ =
                     log "UrlChange" loc
             in
-                ( { model | proposedMedia = locationMediaSpec loc }, Cmd.none )
+            ( { model | proposedMedia = locationMediaSpec loc }, Cmd.none )
 
         Navigate url ->
             let
                 _ =
                     log "Navigate" url
             in
-                ( model, newUrl url )
+            ( model, newUrl url )
 
         NavbarMsg state ->
             ( { model | navbarState = state }, Cmd.none )
@@ -800,7 +803,7 @@ mainUpdate msg model =
                 _ =
                     Debug.log "mouseover target" target
             in
-                ( { model | progressHover = Just e }, Cmd.none )
+            ( { model | progressHover = Just e }, Cmd.none )
 
         MediaLoaded _ ->
             ( { model | loadingMedia = False }, Cmd.none )
@@ -820,6 +823,7 @@ setOptions _ model =
                 , autoJoinPolicy = Cast.originScoped
             }
         )
+
     else
         ( model, Cmd.none )
 

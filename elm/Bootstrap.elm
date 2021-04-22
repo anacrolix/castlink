@@ -141,9 +141,9 @@ button ctx icon attrs text =
                 Nothing ->
                     []
     in
-        Html.button
-            (List.concat [ [ buttonContext ctx ], attrs ])
-            (iconNodes ++ [ Html.text text ])
+    Html.button
+        (List.concat [ [ buttonContext ctx ], attrs ])
+        (iconNodes ++ [ Html.text text ])
 
 
 inlineForm attrs controls =
