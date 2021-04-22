@@ -67,7 +67,7 @@ type alias Model =
 
 
 type alias MouseoverEvent =
-    { offsetX : Int
+    { offsetX : Float
     }
 
 
@@ -526,11 +526,9 @@ progress model =
             div
                 [ class "progress"
                 , Html.Events.on "click" decodeProgressClick
-                , let
-                    defaultOptions =
-                        Html.Events.defaultOptions
-                  in
-                  Html.Events.on "mousemove" <| JD.map MouseoverProgress decodeMouseoverEvent
+
+                -- , Html.Events.on "touchdown" decodeProgressClick
+                , Html.Events.on "pointermove" <| JD.map MouseoverProgress decodeMouseoverEvent
                 , style [ ( "position", "relative" ) ]
                 ]
             <|
@@ -604,10 +602,10 @@ decodeProgressClick : Decoder Msg
 decodeProgressClick =
     let
         f x w =
-            ProgressClicked <| toFloat x / toFloat w
+            ProgressClicked <| x / toFloat w
     in
     JD.map2 f
-        (field "offsetX" JD.int)
+        (field "offsetX" JD.float)
         (at [ "currentTarget", "clientWidth" ] JD.int)
 
 
@@ -616,7 +614,7 @@ decodeMouseoverEvent =
     traceDecoder <|
         JD.map
             MouseoverEvent
-            (field "offsetX" int)
+            (field "offsetX" float)
 
 
 playerCard : Model -> Html Msg
@@ -799,10 +797,6 @@ mainUpdate msg model =
             run model
 
         MouseoverProgress e ->
-            let
-                _ =
-                    Debug.log "mouseover target" target
-            in
             ( { model | progressHover = Just e }, Cmd.none )
 
         MediaLoaded _ ->

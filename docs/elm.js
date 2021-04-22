@@ -17090,7 +17090,6 @@ var _user$project$CastLink$mainUpdate = F2(
 			case 'Update':
 				return _p18._0(model);
 			case 'MouseoverProgress':
-				var _p26 = A2(_elm_lang$core$Debug$log, 'mouseover target', _elm_lang$html$Html_Attributes$target);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -17120,7 +17119,7 @@ var _user$project$CastLink$mainUpdate = F2(
 	});
 var _user$project$CastLink$update = F2(
 	function (msg, model) {
-		var _p27 = A2(_elm_lang$core$Debug$log, 'update', msg);
+		var _p26 = A2(_elm_lang$core$Debug$log, 'update', msg);
 		return A3(
 			_user$project$CastLink$chainUpdates,
 			msg,
@@ -17146,7 +17145,7 @@ var _user$project$CastLink$decodeMouseoverEvent = _user$project$CastLink$traceDe
 	A2(
 		_elm_lang$core$Json_Decode$map,
 		_user$project$CastLink$MouseoverEvent,
-		A2(_elm_lang$core$Json_Decode$field, 'offsetX', _elm_lang$core$Json_Decode$int)));
+		A2(_elm_lang$core$Json_Decode$field, 'offsetX', _elm_lang$core$Json_Decode$float)));
 var _user$project$CastLink$Updater = F3(
 	function (a, b, c) {
 		return {model: a, cmd: b, msg: c};
@@ -17173,12 +17172,12 @@ var _user$project$CastLink$decodeProgressClick = function () {
 	var f = F2(
 		function (x, w) {
 			return _user$project$CastLink$ProgressClicked(
-				_elm_lang$core$Basics$toFloat(x) / _elm_lang$core$Basics$toFloat(w));
+				x / _elm_lang$core$Basics$toFloat(w));
 		});
 	return A3(
 		_elm_lang$core$Json_Decode$map2,
 		f,
-		A2(_elm_lang$core$Json_Decode$field, 'offsetX', _elm_lang$core$Json_Decode$int),
+		A2(_elm_lang$core$Json_Decode$field, 'offsetX', _elm_lang$core$Json_Decode$float),
 		A2(
 			_elm_lang$core$Json_Decode$at,
 			{
@@ -17205,13 +17204,10 @@ var _user$project$CastLink$progress = function (model) {
 						_0: A2(_elm_lang$html$Html_Events$on, 'click', _user$project$CastLink$decodeProgressClick),
 						_1: {
 							ctor: '::',
-							_0: function () {
-								var defaultOptions = _elm_lang$html$Html_Events$defaultOptions;
-								return A2(
-									_elm_lang$html$Html_Events$on,
-									'mousemove',
-									A2(_elm_lang$core$Json_Decode$map, _user$project$CastLink$MouseoverProgress, _user$project$CastLink$decodeMouseoverEvent));
-							}(),
+							_0: A2(
+								_elm_lang$html$Html_Events$on,
+								'pointermove',
+								A2(_elm_lang$core$Json_Decode$map, _user$project$CastLink$MouseoverProgress, _user$project$CastLink$decodeMouseoverEvent)),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$html$Html_Attributes$style(
@@ -17278,9 +17274,9 @@ var _user$project$CastLink$progress = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												function (_p28) {
+												function (_p27) {
 													return _user$project$CastLink$secsToHhmmss(
-														_elm_lang$core$Basics$floor(_p28));
+														_elm_lang$core$Basics$floor(_p27));
 												}(media.currentTime)),
 											_1: {ctor: '[]'}
 										}),
@@ -17301,9 +17297,9 @@ var _user$project$CastLink$progress = function (model) {
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html$text(
-													function (_p29) {
+													function (_p28) {
 														return _user$project$CastLink$secsToHhmmss(
-															_elm_lang$core$Basics$floor(_p29));
+															_elm_lang$core$Basics$floor(_p28));
 													}(duration)),
 												_1: {ctor: '[]'}
 											}),
@@ -17369,9 +17365,9 @@ var _user$project$CastLink$playerButtons = function (media) {
 			};
 		});
 	var makeSeekButtons = _elm_lang$core$List$map(
-		function (_p30) {
-			var _p31 = _p30;
-			return A3(seek, media.currentTime + _p31._0, _p31._1, _p31._2);
+		function (_p29) {
+			var _p30 = _p29;
+			return A3(seek, media.currentTime + _p30._0, _p30._1, _p30._2);
 		});
 	var seekBackButtons = makeSeekButtons(
 		{
@@ -17497,8 +17493,8 @@ var _user$project$CastLink$playerButtons = function (media) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						function () {
-							var _p32 = playerState;
-							switch (_p32.ctor) {
+							var _p31 = playerState;
+							switch (_p31.ctor) {
 								case 'Idle':
 									return {
 										ctor: '::',
@@ -17560,7 +17556,7 @@ var _user$project$CastLink$playerCard = function (model) {
 					}
 				})));
 	var contents = function () {
-		var _p33 = A2(
+		var _p32 = A2(
 			_elm_lang$core$Maybe$andThen,
 			function (_) {
 				return _.media;
@@ -17571,14 +17567,14 @@ var _user$project$CastLink$playerCard = function (model) {
 					return _.session;
 				},
 				model.context));
-		if (_p33.ctor === 'Just') {
-			var _p34 = _p33._0;
-			return _elm_lang$core$Native_Utils.eq(_p34.playerState, _user$project$Cast$Idle) ? noMedia : A2(
+		if (_p32.ctor === 'Just') {
+			var _p33 = _p32._0;
+			return _elm_lang$core$Native_Utils.eq(_p33.playerState, _user$project$Cast$Idle) ? noMedia : A2(
 				_elm_lang$core$List$map,
 				_user$project$Bootstrap_Card$custom,
 				{
 					ctor: '::',
-					_0: _user$project$CastLink$playerButtons(_p34),
+					_0: _user$project$CastLink$playerButtons(_p33),
 					_1: function () {
 						var card = function (node) {
 							return _user$project$Bootstrap_Card$view(
@@ -17925,8 +17921,8 @@ var _user$project$CastLink$mediaCard = function (model) {
 		},
 		model.context);
 	var haveSession = function () {
-		var _p35 = session;
-		if (_p35.ctor === 'Just') {
+		var _p34 = session;
+		if (_p34.ctor === 'Just') {
 			return true;
 		} else {
 			return false;
@@ -18037,8 +18033,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					ctor: '::',
 					_0: _elm_lang$core$List$singleton(
 						function () {
-							var _p36 = model.api.loaded;
-							if (_p36 === true) {
+							var _p35 = model.api.loaded;
+							if (_p35 === true) {
 								var alert = function (button) {
 									return _user$project$Bootstrap_Alert$warning(
 										{
@@ -18058,11 +18054,11 @@ var _user$project$CastLink$sessionCard = function (model) {
 											}
 										});
 								};
-								var _p37 = model.context;
-								if (_p37.ctor === 'Just') {
-									var _p40 = _p37._0;
-									var _p38 = _p40.castState;
-									switch (_p38.ctor) {
+								var _p36 = model.context;
+								if (_p36.ctor === 'Just') {
+									var _p39 = _p36._0;
+									var _p37 = _p39.castState;
+									switch (_p37.ctor) {
 										case 'NotConnected':
 											return alert(
 												A4(
@@ -18119,13 +18115,13 @@ var _user$project$CastLink$sessionCard = function (model) {
 																				'',
 																				A2(
 																					_elm_lang$core$Maybe$map,
-																					function (_p39) {
+																					function (_p38) {
 																						return _user$project$Unicode$unEsc(
 																							function (_) {
 																								return _.deviceName;
-																							}(_p39));
+																							}(_p38));
 																					},
-																					_p40.session))),
+																					_p39.session))),
 																		_1: {ctor: '[]'}
 																	}),
 																_1: {
@@ -18251,8 +18247,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					{ctor: '[]'}))));
 };
 var _user$project$CastLink$viewContents = function (model) {
-	var _p41 = model.page;
-	switch (_p41.ctor) {
+	var _p40 = model.page;
+	switch (_p40.ctor) {
 		case 'Caster':
 			return A2(
 				_elm_lang$core$List$map,
@@ -18312,10 +18308,10 @@ var _user$project$CastLink$Dev = {ctor: 'Dev'};
 var _user$project$CastLink$About = {ctor: 'About'};
 var _user$project$CastLink$Caster = {ctor: 'Caster'};
 var _user$project$CastLink$init = function (location) {
-	var _p42 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
-	var navbarState = _p42._0;
-	var navbarCmd = _p42._1;
-	var _p43 = A2(_elm_lang$core$Debug$log, 'init location', location);
+	var _p41 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
+	var navbarState = _p41._0;
+	var navbarCmd = _p41._1;
+	var _p42 = A2(_elm_lang$core$Debug$log, 'init location', location);
 	return {
 		ctor: '_Tuple2',
 		_0: {
