@@ -39,8 +39,8 @@ function elmCastContext(c) {
 							return {
 								url: m.media.contentId,
 								subtitles: ifTrue(mi.tracks, ts => ts.filter(t => typeof t.trackContentId == 'string').map(t => t.trackContentId)),
-								poster: md.images[0].url,
-								title: md.title,
+								poster: md.images?.[0].url ?? '',
+								title: md.title ?? '',
 								subtitle: md.subtitle,
 							};
 						})(),
