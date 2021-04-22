@@ -6,7 +6,7 @@
     "source-directories": [
         ".",
         "elm-bootstrap/src",
-        "../../html-escape-sequences/src"
+        "html-escape-sequences/src"
     ],
     "exposed-modules": [],
     "dependencies": {
