@@ -20,6 +20,7 @@ import Json.Encode
 import List exposing (..)
 import Markdown
 import Maybe exposing (..)
+import Maybe.Extra
 import Navigation exposing (..)
 import Query exposing (..)
 import String
@@ -744,12 +745,17 @@ mainUpdate msg model =
         ApiAvailability api ->
             ( { model | api = api }, Cmd.none )
 
-        CastContext context ->
+        CastContext jsContext ->
             let
-                _ =
-                    log "cast context" context
+                context =
+                    Cast.fromJsContext jsContext
             in
-            ( { model | context = Just <| Cast.fromJsContext context }, Cmd.none )
+            ( { model
+                | context = Just <| Cast.fromJsContext jsContext
+                , loadingMedia = model.loadingMedia && Maybe.Extra.isJust context.session
+              }
+            , Cmd.none
+            )
 
         RequestSession ->
             ( model, Cast.requestSession () )

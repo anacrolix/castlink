@@ -5886,6 +5886,185 @@ var _debois$elm_dom$DOM$Rectangle = F4(
 		return {top: a, left: b, width: c, height: d};
 	});
 
+var _elm_community$maybe_extra$Maybe_Extra$foldrValues = F2(
+	function (item, list) {
+		var _p0 = item;
+		if (_p0.ctor === 'Nothing') {
+			return list;
+		} else {
+			return {ctor: '::', _0: _p0._0, _1: list};
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$values = A2(
+	_elm_lang$core$List$foldr,
+	_elm_community$maybe_extra$Maybe_Extra$foldrValues,
+	{ctor: '[]'});
+var _elm_community$maybe_extra$Maybe_Extra$filter = F2(
+	function (f, m) {
+		var _p1 = A2(_elm_lang$core$Maybe$map, f, m);
+		if ((_p1.ctor === 'Just') && (_p1._0 === true)) {
+			return m;
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$traverseArray = function (f) {
+	var step = F2(
+		function (e, acc) {
+			var _p2 = f(e);
+			if (_p2.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$Array$push(_p2._0),
+					acc);
+			}
+		});
+	return A2(
+		_elm_lang$core$Array$foldl,
+		step,
+		_elm_lang$core$Maybe$Just(_elm_lang$core$Array$empty));
+};
+var _elm_community$maybe_extra$Maybe_Extra$combineArray = _elm_community$maybe_extra$Maybe_Extra$traverseArray(_elm_lang$core$Basics$identity);
+var _elm_community$maybe_extra$Maybe_Extra$traverse = function (f) {
+	var step = F2(
+		function (e, acc) {
+			var _p3 = f(e);
+			if (_p3.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})(_p3._0),
+					acc);
+			}
+		});
+	return A2(
+		_elm_lang$core$List$foldr,
+		step,
+		_elm_lang$core$Maybe$Just(
+			{ctor: '[]'}));
+};
+var _elm_community$maybe_extra$Maybe_Extra$combine = _elm_community$maybe_extra$Maybe_Extra$traverse(_elm_lang$core$Basics$identity);
+var _elm_community$maybe_extra$Maybe_Extra$toArray = function (m) {
+	var _p4 = m;
+	if (_p4.ctor === 'Nothing') {
+		return _elm_lang$core$Array$empty;
+	} else {
+		return A2(_elm_lang$core$Array$repeat, 1, _p4._0);
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$toList = function (m) {
+	var _p5 = m;
+	if (_p5.ctor === 'Nothing') {
+		return {ctor: '[]'};
+	} else {
+		return {
+			ctor: '::',
+			_0: _p5._0,
+			_1: {ctor: '[]'}
+		};
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$orElse = F2(
+	function (ma, mb) {
+		var _p6 = mb;
+		if (_p6.ctor === 'Nothing') {
+			return ma;
+		} else {
+			return mb;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$orElseLazy = F2(
+	function (fma, mb) {
+		var _p7 = mb;
+		if (_p7.ctor === 'Nothing') {
+			return fma(
+				{ctor: '_Tuple0'});
+		} else {
+			return mb;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$orLazy = F2(
+	function (ma, fmb) {
+		var _p8 = ma;
+		if (_p8.ctor === 'Nothing') {
+			return fmb(
+				{ctor: '_Tuple0'});
+		} else {
+			return ma;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$or = F2(
+	function (ma, mb) {
+		var _p9 = ma;
+		if (_p9.ctor === 'Nothing') {
+			return mb;
+		} else {
+			return ma;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$prev = _elm_lang$core$Maybe$map2(_elm_lang$core$Basics$always);
+var _elm_community$maybe_extra$Maybe_Extra$next = _elm_lang$core$Maybe$map2(
+	_elm_lang$core$Basics$flip(_elm_lang$core$Basics$always));
+var _elm_community$maybe_extra$Maybe_Extra$andMap = _elm_lang$core$Maybe$map2(
+	F2(
+		function (x, y) {
+			return y(x);
+		}));
+var _elm_community$maybe_extra$Maybe_Extra$unpack = F3(
+	function (d, f, m) {
+		var _p10 = m;
+		if (_p10.ctor === 'Nothing') {
+			return d(
+				{ctor: '_Tuple0'});
+		} else {
+			return f(_p10._0);
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$unwrap = F3(
+	function (d, f, m) {
+		var _p11 = m;
+		if (_p11.ctor === 'Nothing') {
+			return d;
+		} else {
+			return f(_p11._0);
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$isJust = function (m) {
+	var _p12 = m;
+	if (_p12.ctor === 'Nothing') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$isNothing = function (m) {
+	var _p13 = m;
+	if (_p13.ctor === 'Nothing') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$join = function (mx) {
+	var _p14 = mx;
+	if (_p14.ctor === 'Just') {
+		return _p14._0;
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra_ops = _elm_community$maybe_extra$Maybe_Extra_ops || {};
+_elm_community$maybe_extra$Maybe_Extra_ops['?'] = F2(
+	function (mx, x) {
+		return A2(_elm_lang$core$Maybe$withDefault, x, mx);
+	});
+
 var _elm_lang$animation_frame$Native_AnimationFrame = function()
 {
 
@@ -16983,15 +17162,16 @@ var _user$project$CastLink$mainUpdate = F2(
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'CastContext':
-				var _p20 = _p18._0;
-				var _p19 = A2(_elm_lang$core$Debug$log, 'cast context', _p20);
+				var _p19 = _p18._0;
+				var context = _user$project$Cast$fromJsContext(_p19);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
 							context: _elm_lang$core$Maybe$Just(
-								_user$project$Cast$fromJsContext(_p20))
+								_user$project$Cast$fromJsContext(_p19)),
+							loadingMedia: model.loadingMedia && _elm_community$maybe_extra$Maybe_Extra$isJust(context.session)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -17003,24 +17183,24 @@ var _user$project$CastLink$mainUpdate = F2(
 						{ctor: '_Tuple0'})
 				};
 			case 'UrlChange':
-				var _p22 = _p18._0;
-				var _p21 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p22);
+				var _p21 = _p18._0;
+				var _p20 = A2(_elm_lang$core$Debug$log, 'UrlChange', _p21);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							proposedMedia: _user$project$CastLink$locationMediaSpec(_p22)
+							proposedMedia: _user$project$CastLink$locationMediaSpec(_p21)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Navigate':
-				var _p24 = _p18._0;
-				var _p23 = A2(_elm_lang$core$Debug$log, 'Navigate', _p24);
+				var _p23 = _p18._0;
+				var _p22 = A2(_elm_lang$core$Debug$log, 'Navigate', _p23);
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: _elm_lang$navigation$Navigation$newUrl(_p24)
+					_1: _elm_lang$navigation$Navigation$newUrl(_p23)
 				};
 			case 'NavbarMsg':
 				return {
@@ -17060,7 +17240,7 @@ var _user$project$CastLink$mainUpdate = F2(
 					ctor: '_Tuple2',
 					_0: model,
 					_1: function () {
-						var _p25 = A2(
+						var _p24 = A2(
 							_elm_lang$core$Maybe$andThen,
 							function (_) {
 								return _.duration;
@@ -17076,10 +17256,10 @@ var _user$project$CastLink$mainUpdate = F2(
 										return _.session;
 									},
 									model.context)));
-						if (_p25.ctor === 'Just') {
+						if (_p24.ctor === 'Just') {
 							return _user$project$Cast$controlPlayer(
 								_user$project$Cast$toJsPlayerAction(
-									_user$project$Cast$Seek(_p18._0 * _p25._0)));
+									_user$project$Cast$Seek(_p18._0 * _p24._0)));
 						} else {
 							return _elm_lang$core$Platform_Cmd$none;
 						}
@@ -17119,7 +17299,7 @@ var _user$project$CastLink$mainUpdate = F2(
 	});
 var _user$project$CastLink$update = F2(
 	function (msg, model) {
-		var _p26 = A2(_elm_lang$core$Debug$log, 'update', msg);
+		var _p25 = A2(_elm_lang$core$Debug$log, 'update', msg);
 		return A3(
 			_user$project$CastLink$chainUpdates,
 			msg,
@@ -17274,9 +17454,9 @@ var _user$project$CastLink$progress = function (model) {
 										{
 											ctor: '::',
 											_0: _elm_lang$html$Html$text(
-												function (_p27) {
+												function (_p26) {
 													return _user$project$CastLink$secsToHhmmss(
-														_elm_lang$core$Basics$floor(_p27));
+														_elm_lang$core$Basics$floor(_p26));
 												}(media.currentTime)),
 											_1: {ctor: '[]'}
 										}),
@@ -17297,9 +17477,9 @@ var _user$project$CastLink$progress = function (model) {
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html$text(
-													function (_p28) {
+													function (_p27) {
 														return _user$project$CastLink$secsToHhmmss(
-															_elm_lang$core$Basics$floor(_p28));
+															_elm_lang$core$Basics$floor(_p27));
 													}(duration)),
 												_1: {ctor: '[]'}
 											}),
@@ -17365,9 +17545,9 @@ var _user$project$CastLink$playerButtons = function (media) {
 			};
 		});
 	var makeSeekButtons = _elm_lang$core$List$map(
-		function (_p29) {
-			var _p30 = _p29;
-			return A3(seek, media.currentTime + _p30._0, _p30._1, _p30._2);
+		function (_p28) {
+			var _p29 = _p28;
+			return A3(seek, media.currentTime + _p29._0, _p29._1, _p29._2);
 		});
 	var seekBackButtons = makeSeekButtons(
 		{
@@ -17493,8 +17673,8 @@ var _user$project$CastLink$playerButtons = function (media) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						function () {
-							var _p31 = playerState;
-							switch (_p31.ctor) {
+							var _p30 = playerState;
+							switch (_p30.ctor) {
 								case 'Idle':
 									return {
 										ctor: '::',
@@ -17556,7 +17736,7 @@ var _user$project$CastLink$playerCard = function (model) {
 					}
 				})));
 	var contents = function () {
-		var _p32 = A2(
+		var _p31 = A2(
 			_elm_lang$core$Maybe$andThen,
 			function (_) {
 				return _.media;
@@ -17567,14 +17747,14 @@ var _user$project$CastLink$playerCard = function (model) {
 					return _.session;
 				},
 				model.context));
-		if (_p32.ctor === 'Just') {
-			var _p33 = _p32._0;
-			return _elm_lang$core$Native_Utils.eq(_p33.playerState, _user$project$Cast$Idle) ? noMedia : A2(
+		if (_p31.ctor === 'Just') {
+			var _p32 = _p31._0;
+			return _elm_lang$core$Native_Utils.eq(_p32.playerState, _user$project$Cast$Idle) ? noMedia : A2(
 				_elm_lang$core$List$map,
 				_user$project$Bootstrap_Card$custom,
 				{
 					ctor: '::',
-					_0: _user$project$CastLink$playerButtons(_p33),
+					_0: _user$project$CastLink$playerButtons(_p32),
 					_1: function () {
 						var card = function (node) {
 							return _user$project$Bootstrap_Card$view(
@@ -17921,8 +18101,8 @@ var _user$project$CastLink$mediaCard = function (model) {
 		},
 		model.context);
 	var haveSession = function () {
-		var _p34 = session;
-		if (_p34.ctor === 'Just') {
+		var _p33 = session;
+		if (_p33.ctor === 'Just') {
 			return true;
 		} else {
 			return false;
@@ -18033,8 +18213,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					ctor: '::',
 					_0: _elm_lang$core$List$singleton(
 						function () {
-							var _p35 = model.api.loaded;
-							if (_p35 === true) {
+							var _p34 = model.api.loaded;
+							if (_p34 === true) {
 								var alert = function (button) {
 									return _user$project$Bootstrap_Alert$warning(
 										{
@@ -18054,11 +18234,11 @@ var _user$project$CastLink$sessionCard = function (model) {
 											}
 										});
 								};
-								var _p36 = model.context;
-								if (_p36.ctor === 'Just') {
-									var _p39 = _p36._0;
-									var _p37 = _p39.castState;
-									switch (_p37.ctor) {
+								var _p35 = model.context;
+								if (_p35.ctor === 'Just') {
+									var _p38 = _p35._0;
+									var _p36 = _p38.castState;
+									switch (_p36.ctor) {
 										case 'NotConnected':
 											return alert(
 												A4(
@@ -18115,13 +18295,13 @@ var _user$project$CastLink$sessionCard = function (model) {
 																				'',
 																				A2(
 																					_elm_lang$core$Maybe$map,
-																					function (_p38) {
+																					function (_p37) {
 																						return _user$project$Unicode$unEsc(
 																							function (_) {
 																								return _.deviceName;
-																							}(_p38));
+																							}(_p37));
 																					},
-																					_p39.session))),
+																					_p38.session))),
 																		_1: {ctor: '[]'}
 																	}),
 																_1: {
@@ -18247,8 +18427,8 @@ var _user$project$CastLink$sessionCard = function (model) {
 					{ctor: '[]'}))));
 };
 var _user$project$CastLink$viewContents = function (model) {
-	var _p40 = model.page;
-	switch (_p40.ctor) {
+	var _p39 = model.page;
+	switch (_p39.ctor) {
 		case 'Caster':
 			return A2(
 				_elm_lang$core$List$map,
@@ -18308,10 +18488,10 @@ var _user$project$CastLink$Dev = {ctor: 'Dev'};
 var _user$project$CastLink$About = {ctor: 'About'};
 var _user$project$CastLink$Caster = {ctor: 'Caster'};
 var _user$project$CastLink$init = function (location) {
-	var _p41 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
-	var navbarState = _p41._0;
-	var navbarCmd = _p41._1;
-	var _p42 = A2(_elm_lang$core$Debug$log, 'init location', location);
+	var _p40 = _user$project$Bootstrap_Navbar$initialState(_user$project$CastLink$NavbarMsg);
+	var navbarState = _p40._0;
+	var navbarCmd = _p40._1;
+	var _p41 = A2(_elm_lang$core$Debug$log, 'init location', location);
 	return {
 		ctor: '_Tuple2',
 		_0: {
