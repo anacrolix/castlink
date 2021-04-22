@@ -18546,19 +18546,19 @@ var _user$project$CastLink$view = function (model) {
 							_0: A2(navItem, _user$project$CastLink$About, 'About'),
 							_1: {
 								ctor: '::',
-								_0: A2(navItem, _user$project$CastLink$Dev, 'Use on your website'),
+								_0: A2(navItem, _user$project$CastLink$Dev, 'API'),
 								_1: {
 									ctor: '::',
 									_0: A2(
 										_user$project$Bootstrap_Navbar$itemLink,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$href('https://www.patreon.com/bePatron?u=6126463'),
+											_0: _elm_lang$html$Html_Attributes$href('https://github.com/sponsors/anacrolix'),
 											_1: {ctor: '[]'}
 										},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Become a Patron!'),
+											_0: _elm_lang$html$Html$text('Sponsor'),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}

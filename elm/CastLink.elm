@@ -177,10 +177,9 @@ view model =
             |> Navbar.items
                 --[ navItem Caster "Link caster"
                 [ navItem About "About"
-                , navItem Dev "Use on your website"
-                , Navbar.itemLink [ href "https://www.patreon.com/bePatron?u=6126463" ] [ Html.text "Become a Patron!" ]
+                , navItem Dev "API"
+                , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
                 ]
-            --|> Navbar.customItems [ Navbar.customItem <| div [ innerHtml """<a href="https://www.patreon.com/bePatron?u=6126463" data-patreon-widget-type="become-patron-button">Become a Patron!</a><script async src="https://c6.patreon.com/becomePatronButton.bundle.js"></script>""" ] [] ]
             |> Navbar.view model.navbarState
         ]
             ++ viewContents model
