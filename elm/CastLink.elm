@@ -30,6 +30,8 @@ import Maybe.Extra
 import Query exposing (..)
 import String
 import Url
+import Url.Parser
+import Url.Parser.Query
 
 
 main : Program () Model Msg
@@ -108,10 +110,47 @@ locationMediaSpec loc =
     withDefault "" loc.fragment |> parseQuerySpec
 
 
+internalPageForUrl : Url.Url -> Page
+internalPageForUrl url =
+    case url.fragment |> Maybe.map parseQuery |> Maybe.andThen (first "page") |> Maybe.Extra.join |> Maybe.withDefault "" of
+        "dev" ->
+            Dev
+
+        "about" ->
+            About
+
+        _ ->
+            Caster
+
+
 type Page
     = Caster
     | About
     | Dev
+
+
+aboutPath =
+    "#page=about"
+
+
+devPath =
+    "#page=dev"
+
+
+rootCasterPath =
+    ""
+
+
+internalPageLink page =
+    case page of
+        Caster ->
+            rootCasterPath
+
+        About ->
+            aboutPath
+
+        Dev ->
+            devPath
 
 
 parseQuerySpec : String -> Cast.Media
@@ -160,11 +199,6 @@ maybeToList maybe =
             []
 
 
-voidHref : Html.Attribute msg
-voidHref =
-    href "javascript:void(0)"
-
-
 view : Model -> Document Msg
 view model =
     let
@@ -177,7 +211,7 @@ view model =
                     else
                         Navbar.itemLink
             in
-            maker [ voidHref, onClick <| SetPage page ] [ Html.text text ]
+            maker [ href <| internalPageLink page ] [ Html.text text ]
     in
     { title = ""
     , body =
@@ -185,7 +219,7 @@ view model =
         , Bootstrap.CDN.fontAwesome
         , Grid.container [] <|
             [ Navbar.config NavbarMsg
-                |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
+                |> Navbar.brand [] [ text "chromecast.link" ]
                 |> Navbar.dark
                 |> Navbar.items
                     [ navItem Caster
@@ -780,14 +814,15 @@ mainUpdate msg model =
                 _ =
                     log "UrlChange" loc
             in
-            ( { model | proposedMedia = locationMediaSpec loc }, Cmd.none )
+            ( { model | proposedMedia = locationMediaSpec loc, page = internalPageForUrl loc }, Cmd.none )
 
         Navigate request ->
-            let
-                _ =
-                    log "Navigate" request
-            in
-            ( model, Cmd.none )
+            case request of
+                Internal url ->
+                    ( model, Browser.Navigation.replaceUrl model.navKey <| Url.toString url )
+
+                External s ->
+                    ( model, Browser.Navigation.load s )
 
         NavbarMsg state ->
             ( { model | navbarState = state }, Cmd.none )

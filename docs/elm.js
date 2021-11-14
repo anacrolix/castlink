@@ -6351,6 +6351,34 @@ var $author$project$Cast$fromJsContext = function (c) {
 			c.session)
 	};
 };
+var $author$project$CastLink$About = {$: 'About'};
+var $author$project$CastLink$Dev = {$: 'Dev'};
+var $elm_community$maybe_extra$Maybe$Extra$join = function (mx) {
+	if (mx.$ === 'Just') {
+		var x = mx.a;
+		return x;
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$CastLink$internalPageForUrl = function (url) {
+	var _v0 = A2(
+		$elm$core$Maybe$withDefault,
+		'',
+		$elm_community$maybe_extra$Maybe$Extra$join(
+			A2(
+				$elm$core$Maybe$andThen,
+				$author$project$Query$first('page'),
+				A2($elm$core$Maybe$map, $author$project$Query$parseQuery, url.fragment))));
+	switch (_v0) {
+		case 'dev':
+			return $author$project$CastLink$Dev;
+		case 'about':
+			return $author$project$CastLink$About;
+		default:
+			return $author$project$CastLink$Caster;
+	}
+};
 var $elm_community$maybe_extra$Maybe$Extra$isJust = function (m) {
 	if (m.$ === 'Nothing') {
 		return false;
@@ -6358,6 +6386,7 @@ var $elm_community$maybe_extra$Maybe$Extra$isJust = function (m) {
 		return true;
 	}
 };
+var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
 		return _Json_wrap(
@@ -6391,6 +6420,7 @@ var $author$project$Cast$loadMedia = _Platform_outgoingPort(
 					$elm$json$Json$Encode$string($.url))
 				]));
 	});
+var $elm$browser$Browser$Navigation$replaceUrl = _Browser_replaceUrl;
 var $author$project$Cast$requestSession = _Platform_outgoingPort(
 	'requestSession',
 	function ($) {
@@ -6415,6 +6445,50 @@ var $author$project$Cast$toJsPlayerAction = function (pa) {
 				$author$project$Cast$emptyPlayerAction,
 				{stop: true});
 	}
+};
+var $elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + $elm$core$String$fromInt(port_));
+		}
+	});
+var $elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var $elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _v0 = url.protocol;
+		if (_v0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		$elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			$elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					$elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
 };
 var $author$project$CastLink$mainUpdate = F2(
 	function (msg, model) {
@@ -6449,13 +6523,26 @@ var $author$project$CastLink$mainUpdate = F2(
 					_Utils_update(
 						model,
 						{
+							page: $author$project$CastLink$internalPageForUrl(loc),
 							proposedMedia: $author$project$CastLink$locationMediaSpec(loc)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'Navigate':
 				var request = msg.a;
-				var _v2 = A2($elm$core$Debug$log, 'Navigate', request);
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				if (request.$ === 'Internal') {
+					var url = request.a;
+					return _Utils_Tuple2(
+						model,
+						A2(
+							$elm$browser$Browser$Navigation$replaceUrl,
+							model.navKey,
+							$elm$url$Url$toString(url)));
+				} else {
+					var s = request.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$browser$Browser$Navigation$load(s));
+				}
 			case 'NavbarMsg':
 				var state = msg.a;
 				return _Utils_Tuple2(
@@ -6597,11 +6684,6 @@ var $author$project$CastLink$update = F2(
 			_List_fromArray(
 				[$author$project$CastLink$mainUpdate, $author$project$CastLink$setOptions]));
 	});
-var $author$project$CastLink$About = {$: 'About'};
-var $author$project$CastLink$Dev = {$: 'Dev'};
-var $author$project$CastLink$SetPage = function (a) {
-	return {$: 'SetPage', a: a};
-};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$Brand = function (a) {
 	return {$: 'Brand', a: a};
 };
@@ -6737,6 +6819,19 @@ var $rundis$elm_bootstrap$Bootstrap$CDN$fontAwesome = A3(
 			$elm$html$Html$Attributes$href('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css')
 		]),
 	_List_Nil);
+var $author$project$CastLink$aboutPath = '#page=about';
+var $author$project$CastLink$devPath = '#page=dev';
+var $author$project$CastLink$rootCasterPath = '';
+var $author$project$CastLink$internalPageLink = function (page) {
+	switch (page.$) {
+		case 'Caster':
+			return $author$project$CastLink$rootCasterPath;
+		case 'About':
+			return $author$project$CastLink$aboutPath;
+		default:
+			return $author$project$CastLink$devPath;
+	}
+};
 var $rundis$elm_bootstrap$Bootstrap$Navbar$Item = function (a) {
 	return {$: 'Item', a: a};
 };
@@ -6763,23 +6858,6 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$items = F2(
 			},
 			config_);
 	});
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $rundis$elm_bootstrap$Bootstrap$CDN$stylesheet = A3(
 	$elm$html$Html$node,
 	'link',
@@ -6801,6 +6879,17 @@ var $rundis$elm_bootstrap$Bootstrap$Navbar$maybeBrand = function (brand_) {
 		return _List_Nil;
 	}
 };
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
 var $rundis$elm_bootstrap$Bootstrap$Navbar$sizeToComparable = function (size) {
 	switch (size.$) {
 		case 'XS':
@@ -9234,6 +9323,12 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
 var $rundis$elm_bootstrap$Bootstrap$Alert$Closed = {$: 'Closed'};
 var $rundis$elm_bootstrap$Bootstrap$Alert$StartClose = {$: 'StartClose'};
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
 var $rundis$elm_bootstrap$Bootstrap$Alert$clickHandler = F2(
 	function (visibility, configRec) {
 		var handleClick = F2(
@@ -10510,7 +10605,6 @@ var $author$project$CastLink$viewFooter = function (model) {
 			$author$project$CastLink$ad
 		]);
 };
-var $author$project$CastLink$voidHref = $elm$html$Html$Attributes$href('javascript:void(0)');
 var $author$project$CastLink$view = function (model) {
 	var navItem = F2(
 		function (page, text) {
@@ -10519,9 +10613,8 @@ var $author$project$CastLink$view = function (model) {
 				maker,
 				_List_fromArray(
 					[
-						$author$project$CastLink$voidHref,
-						$elm$html$Html$Events$onClick(
-						$author$project$CastLink$SetPage(page))
+						$elm$html$Html$Attributes$href(
+						$author$project$CastLink$internalPageLink(page))
 					]),
 				_List_fromArray(
 					[
@@ -10563,12 +10656,7 @@ var $author$project$CastLink$view = function (model) {
 								$rundis$elm_bootstrap$Bootstrap$Navbar$dark(
 									A3(
 										$rundis$elm_bootstrap$Bootstrap$Navbar$brand,
-										_List_fromArray(
-											[
-												$author$project$CastLink$voidHref,
-												$elm$html$Html$Events$onClick(
-												$author$project$CastLink$SetPage($author$project$CastLink$Caster))
-											]),
+										_List_Nil,
 										_List_fromArray(
 											[
 												$elm$html$Html$text('chromecast.link')
