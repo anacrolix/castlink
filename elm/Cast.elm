@@ -53,19 +53,25 @@ type alias SessionMedia =
 
 fromJsContext : JsContext -> Context
 fromJsContext c =
-    { c
-        | castState = castStateFromString c.castState
-        , session =
-            Maybe.map
-                (\s ->
-                    { s
-                        | media =
-                            Maybe.map
-                                (\m -> { m | playerState = toPlayerState m.playerState })
-                                s.media
-                    }
-                )
-                c.session
+    { castState = castStateFromString c.castState
+    , session =
+        Maybe.map
+            (\s ->
+                { state = s.state
+                , media =
+                    Maybe.map
+                        (\m ->
+                            { duration = m.duration
+                            , currentTime = m.currentTime
+                            , playerState = toPlayerState m.playerState
+                            , spec = m.spec
+                            }
+                        )
+                        s.media
+                , deviceName = s.deviceName
+                }
+            )
+            c.session
     }
 
 
@@ -92,7 +98,7 @@ castStateFromString s =
             Connected
 
         uff ->
-            Debug.crash uff
+            Debug.log uff NotConnected
 
 
 toPlayerState : String -> PlayerState
@@ -111,7 +117,7 @@ toPlayerState s =
             Buffering
 
         uff ->
-            Debug.crash uff
+            Debug.log uff Idle
 
 
 port onGCastApiAvailability : (ApiAvailability -> msg) -> Sub msg

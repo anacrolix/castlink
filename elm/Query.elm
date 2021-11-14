@@ -37,7 +37,7 @@ parseQuery query =
                             ( key, Just <| String.join "=" rest )
 
                         [] ->
-                            Debug.crash "String.split returned empty list"
+                            Debug.log "String.split returned empty list" ("", Nothing)
                 )
                 params
 

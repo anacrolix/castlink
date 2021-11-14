@@ -1,16 +1,21 @@
 module CastLink exposing (..)
 
+import Basics018 exposing (..)
 import Bootstrap exposing (..)
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Card as Card
+import Bootstrap.Card.Block
 import Bootstrap.Form as Form
 import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Textarea as Textarea
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
+import Browser exposing (..)
+import Browser.Navigation
 import Cast exposing (..)
 import Debug exposing (..)
+import ElmEscapeHtml
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -21,19 +26,20 @@ import List exposing (..)
 import Markdown
 import Maybe exposing (..)
 import Maybe.Extra
-import Navigation exposing (..)
 import Query exposing (..)
 import String
-import Unicode
+import Url
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Navigation.program UrlChange
+    Browser.application
         { init = init
         , update = update
         , view = view
         , subscriptions = subscriptions
+        , onUrlChange = UrlChange
+        , onUrlRequest = Navigate
         }
 
 
@@ -41,8 +47,8 @@ type Msg
     = ApiAvailability Cast.ApiAvailability
     | CastContext Cast.JsContext
     | RequestSession
-    | UrlChange Navigation.Location
-    | Navigate String
+    | UrlChange Url.Url
+    | Navigate UrlRequest
     | NavbarMsg Navbar.State
     | LoadMedia
     | ProposedMediaInput (Cast.Media -> String -> Cast.Media) String
@@ -64,6 +70,7 @@ type alias Model =
     , progressHover : Maybe MouseoverEvent
     , loadingMedia : Bool
     , page : Page
+    , navKey : Browser.Navigation.Key
     }
 
 
@@ -72,11 +79,11 @@ type alias MouseoverEvent =
     }
 
 
-init : Location -> ( Model, Cmd Msg )
-init location =
+init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init flags url key =
     let
         _ =
-            Debug.log "init location" location
+            Debug.log "init location" url
 
         ( navbarState, navbarCmd ) =
             Navbar.initialState NavbarMsg
@@ -85,18 +92,19 @@ init location =
       , setOptions = False
       , context = Nothing
       , navbarState = navbarState
-      , proposedMedia = locationMediaSpec location
+      , proposedMedia = locationMediaSpec url
       , progressHover = Nothing
       , loadingMedia = False
       , page = Caster
+      , navKey = key
       }
     , navbarCmd
     )
 
 
-locationMediaSpec : Location -> Cast.Media
+locationMediaSpec : Url.Url -> Cast.Media
 locationMediaSpec loc =
-    String.dropLeft 1 loc.hash |> parseQuerySpec
+    withDefault "" loc.fragment |> parseQuerySpec
 
 
 type Page
@@ -115,7 +123,7 @@ parseQuerySpec query =
             parseQuery query
 
         decode =
-            Http.decodeUri >> Maybe.withDefault ""
+            Url.percentDecode >> Maybe.withDefault ""
 
         first_ key =
             specQuery |> first key |> Maybe.andThen identity |> Maybe.map decode |> Maybe.withDefault ""
@@ -156,7 +164,7 @@ voidHref =
     href "javascript:void(0)"
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
     let
         navItem page text =
@@ -170,20 +178,24 @@ view model =
             in
             maker [ voidHref, onClick <| SetPage page ] [ Html.text text ]
     in
-    Grid.container [] <|
-        [ Navbar.config NavbarMsg
-            |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
-            |> Navbar.inverse
-            |> Navbar.items
-                --[ navItem Caster "Link caster"
-                [ navItem About "About"
-                , navItem Dev "API"
-                , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
-                ]
-            |> Navbar.view model.navbarState
+    { title = ""
+    , body =
+        [ Grid.container [] <|
+            [ Navbar.config NavbarMsg
+                |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
+                |> Navbar.dark
+                |> Navbar.items
+                    --[ navItem Caster "Link caster"
+                    [ navItem About "About"
+                    , navItem Dev "API"
+                    , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
+                    ]
+                |> Navbar.view model.navbarState
+            ]
+                ++ viewContents model
+                ++ viewFooter model
         ]
-            ++ viewContents model
-            ++ viewFooter model
+    }
 
 
 cardHeader : String -> Card.Config Msg -> Card.Config Msg
@@ -234,7 +246,7 @@ sessionCard : Model -> Html Msg
 sessionCard model =
     let
         contents =
-            List.map Card.custom <|
+            List.map Bootstrap.Card.Block.custom <|
                 List.concat
                     [ maybeToList <| contextAlerts model
                     , List.singleton <|
@@ -242,7 +254,7 @@ sessionCard model =
                             True ->
                                 let
                                     alert button =
-                                        Alert.warning <| p [] [ text "Not connected to a device." ] :: [ button ]
+                                        Alert.simpleWarning [] <| p [] [ text "Not connected to a device." ] :: [ button ]
                                 in
                                 case model.context of
                                     Just context ->
@@ -254,10 +266,10 @@ sessionCard model =
                                                 alert <| Button.button [ Button.info ] <| iconAndText [ "pulse", "spinner" ] "Connecting"
 
                                             Connected ->
-                                                Alert.success <|
+                                                Alert.simpleSuccess [] <|
                                                     [ p []
                                                         [ text "Connected to "
-                                                        , strong [] [ text <| withDefault "" <| Maybe.map (.deviceName >> Unicode.unEsc) context.session ]
+                                                        , strong [] [ text <| withDefault "" <| Maybe.map (.deviceName >> ElmEscapeHtml.unescape) context.session ]
                                                         , text "."
                                                         ]
                                                     , Button.button
@@ -276,16 +288,16 @@ sessionCard model =
                                                     ]
 
                                             NoDevicesAvailable ->
-                                                Alert.danger <|
+                                                Alert.simpleDanger [] <|
                                                     [ strong [] [ text "No receiver devices available." ]
                                                     , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
                                                     ]
 
                                     Nothing ->
-                                        Alert.warning <| List.singleton <| p [] [ text "Context state unknown" ]
+                                        Alert.simpleWarning [] <| List.singleton <| p [] [ text "Context state unknown" ]
 
                             False ->
-                                Alert.warning [ p [] [ text "Cast API not loaded." ] ]
+                                Alert.simpleWarning [] [ p [] [ text "Cast API not loaded." ] ]
                     ]
     in
     Card.config []
@@ -349,7 +361,7 @@ mediaCard model =
         setExample =
             Button.button
                 [ Button.secondary
-                , Button.onClick <| Update <| \model -> ( { model | proposedMedia = Cast.exampleMedia }, Cmd.none )
+                , Button.onClick <| Update <| \m -> ( { m | proposedMedia = Cast.exampleMedia }, Cmd.none )
                 , Button.attrs [ disabled <| proposedMedia == Cast.exampleMedia ]
                 ]
             <|
@@ -360,8 +372,8 @@ mediaCard model =
                 [ Button.secondary
                 , Button.onClick <|
                     Update <|
-                        \model ->
-                            ( withDefault model <| Maybe.map (\media -> { model | proposedMedia = media }) <| loadedMedia model.context
+                        \m ->
+                            ( withDefault m <| Maybe.map (\media -> { m | proposedMedia = media }) <| loadedMedia m.context
                             , Cmd.none
                             )
                 , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia model.context ]
@@ -416,7 +428,7 @@ mediaCard model =
         |> cardHeader "Media"
         |> Card.block []
             (List.map
-                Card.custom
+                Bootstrap.Card.Block.custom
                 [ p [] <|
                     List.intersperse
                         (text " ")
@@ -513,13 +525,13 @@ progress model =
         andThen =
             Maybe.andThen
 
-        media : Maybe Cast.SessionMedia
-        media =
+        maybeMedia : Maybe Cast.SessionMedia
+        maybeMedia =
             model.context |> andThen .session |> andThen .media
 
-        duration : Maybe Float
-        duration =
-            andThen .duration media
+        maybeDuration : Maybe Float
+        maybeDuration =
+            andThen .duration maybeMedia
 
         elem : Cast.SessionMedia -> Float -> Html Msg
         elem media duration =
@@ -529,7 +541,7 @@ progress model =
 
                 -- , Html.Events.on "touchdown" decodeProgressClick
                 , Html.Events.on "pointermove" <| JD.map MouseoverProgress decodeMouseoverEvent
-                , style [ ( "position", "relative" ) ]
+                , style "position" "relative"
                 ]
             <|
                 justList
@@ -539,9 +551,9 @@ progress model =
                       Just <|
                         div
                             [ class "progress-bar"
-                            , Html.Attributes.style
-                                [ ( "width", (toString <| 100 * media.currentTime / duration) ++ "%" )
-                                ]
+                            , style
+                                "width"
+                                ((toString <| 100 * media.currentTime / duration) ++ "%")
                             ]
                             []
                     ]
@@ -549,17 +561,17 @@ progress model =
         card media duration =
             Card.config []
                 |> Card.block []
-                    (List.map Card.custom
+                    (List.map Bootstrap.Card.Block.custom
                         [ div []
                             [ span [] [ text <| secsToHhmmss << floor <| media.currentTime ]
-                            , span [ style [ ( "float", "right" ) ] ] [ text <| secsToHhmmss << floor <| duration ]
+                            , span [ style "float" "right" ] [ text <| secsToHhmmss << floor <| duration ]
                             ]
                         , elem media duration
                         ]
                     )
                 |> Card.view
     in
-    Maybe.map2 card media duration
+    Maybe.map2 card maybeMedia maybeDuration
 
 
 secsToHhmmss : Int -> String
@@ -568,7 +580,7 @@ secsToHhmmss s =
         extract ( q, mm ) =
             case mm of
                 Just m ->
-                    s // q % m
+                    modBy (s // q) m
 
                 Nothing ->
                     s // q
@@ -594,7 +606,7 @@ traceDecoder decoder =
                         JD.succeed <| Debug.log "herp" decoded
 
                     Err err ->
-                        JD.fail <| Debug.log "error" <| err
+                        JD.fail <| JD.errorToString <| Debug.log "error" <| err
             )
 
 
@@ -622,8 +634,8 @@ playerCard model =
     let
         noMedia =
             List.singleton <|
-                Card.custom <|
-                    Alert.warning
+                customCard <|
+                    Alert.simpleWarning []
                         [ strong [] [ text "No media loaded." ]
                         , text " Configure media below, and load it into the player."
                         ]
@@ -635,11 +647,11 @@ playerCard model =
                         noMedia
 
                     else
-                        List.map Card.custom <|
+                        List.map customCard <|
                             playerButtons media
                                 :: (let
                                         card node =
-                                            Card.config [] |> Card.block [] [ Card.custom <| node ] |> Card.view
+                                            Card.config [] |> Card.block [] [ customCard <| node ] |> Card.view
                                     in
                                     justList [ progress model ]
                                    )
@@ -657,9 +669,9 @@ progressHoverPopup : MouseoverEvent -> Html Msg
 progressHoverPopup e =
     p
         [ style
-            [ ( "position", "absolute" )
-            , ( "left", toString e.offsetX )
-            ]
+            "position"
+            "absolute"
+        , style "left" <| toString e.offsetX
         ]
         [ text "herp" ]
 
@@ -717,10 +729,10 @@ chainUpdates : msg -> model -> List (UpdateFn msg model) -> ( model, Cmd msg )
 chainUpdates msg model updates =
     let
         merge =
-            \update ( lastModel, lastCmd ) ->
+            \u ( lastModel, lastCmd ) ->
                 let
                     ( nextModel, nextCmd ) =
-                        update msg lastModel
+                        u msg lastModel
                 in
                 ( nextModel, Cmd.batch [ lastCmd, nextCmd ] )
     in
@@ -766,12 +778,12 @@ mainUpdate msg model =
             in
             ( { model | proposedMedia = locationMediaSpec loc }, Cmd.none )
 
-        Navigate url ->
+        Navigate request ->
             let
                 _ =
-                    log "Navigate" url
+                    log "Navigate" request
             in
-            ( model, newUrl url )
+            ( model, Cmd.none )
 
         NavbarMsg state ->
             ( { model | navbarState = state }, Cmd.none )

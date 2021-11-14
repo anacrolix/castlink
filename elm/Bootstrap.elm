@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Json.Encode exposing (string)
 import List exposing (..)
+import Bootstrap.Card.Block
 
 
 fluidContainer : List (Html msg) -> Html msg
@@ -131,10 +132,10 @@ buttonContext ctx =
 
 
 button : Context -> Maybe String -> List (Attribute msg) -> String -> Html msg
-button ctx icon attrs text =
+button ctx maybeIcon attrs text =
     let
         iconNodes =
-            case icon of
+            case maybeIcon of
                 Just icon ->
                     [ fontAwesomeHtml icon, Html.text " " ]
 
@@ -161,3 +162,6 @@ textInput attrs placeHolder =
 --<div id="api-init-error" class="alert alert-danger initially-hidden" role="alert">
 --  <strong id="api-init-error-info"></strong> You may need to use Chrome, or an Android device.
 --</div>
+
+
+customCard = Bootstrap.Card.Block.custom

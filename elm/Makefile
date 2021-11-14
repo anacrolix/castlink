@@ -1,5 +1,5 @@
 ../docs/elm.js: *.elm
-	elm-make *.elm --output $@
+	elm make CastLink.elm --output $@
 
 format:
 	elm-format --yes *.elm

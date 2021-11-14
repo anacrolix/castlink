@@ -20,7 +20,7 @@ function undefinedToNull(value) {
 	if (value === undefined) return null;
 	return value;
 }
-var app = Elm.CastLink.fullscreen();
+var app = Elm.CastLink.init({});
 function elmCastContext(c) {
 	return {
 		castState: c.getCastState(),
