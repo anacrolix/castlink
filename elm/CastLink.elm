@@ -4,6 +4,7 @@ import Basics018 exposing (..)
 import Bootstrap exposing (..)
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
+import Bootstrap.CDN
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block
 import Bootstrap.Form as Form
@@ -180,13 +181,16 @@ view model =
     in
     { title = ""
     , body =
-        [ Grid.container [] <|
+        [ Bootstrap.CDN.stylesheet
+        , Bootstrap.CDN.fontAwesome
+        , Grid.container [] <|
             [ Navbar.config NavbarMsg
                 |> Navbar.brand [ voidHref, onClick <| SetPage Caster ] [ text "chromecast.link" ]
                 |> Navbar.dark
                 |> Navbar.items
-                    --[ navItem Caster "Link caster"
-                    [ navItem About "About"
+                    [ navItem Caster
+                        "Link caster"
+                    , navItem About "About"
                     , navItem Dev "API"
                     , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
                     ]
