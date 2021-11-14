@@ -1,10 +1,10 @@
 module Bootstrap exposing (..)
 
+import Bootstrap.Card.Block
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Json.Encode exposing (string)
 import List exposing (..)
-import Bootstrap.Card.Block
 
 
 fluidContainer : List (Html msg) -> Html msg
@@ -164,4 +164,5 @@ textInput attrs placeHolder =
 --</div>
 
 
-customCard = Bootstrap.Card.Block.custom
+customCard =
+    Bootstrap.Card.Block.custom
