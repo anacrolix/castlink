@@ -212,23 +212,27 @@ view model =
                         Navbar.itemLink
             in
             maker [ href <| internalPageLink page ] [ Html.text text ]
+
+        navbar =
+            Navbar.config NavbarMsg
+                -- Span is an option for brand in Bootstrap 4, but it doesn't seem to be exposed?
+                --|> Navbar.brand [ href <| internalPageLink Caster ] [ text "chromecast.link" ]
+                |> Navbar.dark
+                |> Navbar.items
+                    [ navItem Caster
+                        "Chromecast.Link"
+                    , navItem About "About"
+                    , navItem Dev "API"
+                    , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
+                    ]
+                |> Navbar.view model.navbarState
     in
     { title = ""
     , body =
         [ Bootstrap.CDN.stylesheet
         , Bootstrap.CDN.fontAwesome
         , Grid.container [] <|
-            [ Navbar.config NavbarMsg
-                |> Navbar.brand [] [ text "chromecast.link" ]
-                |> Navbar.dark
-                |> Navbar.items
-                    [ navItem Caster
-                        "Link caster"
-                    , navItem About "About"
-                    , navItem Dev "API"
-                    , Navbar.itemLink [ href "https://github.com/sponsors/anacrolix" ] [ Html.text "Sponsor" ]
-                    ]
-                |> Navbar.view model.navbarState
+            [ navbar
             ]
                 ++ viewContents model
                 ++ viewFooter model
@@ -241,6 +245,11 @@ cardHeader s =
     Card.headerH5 [] [ text s ]
 
 
+markdownContent : String -> List (Html Msg)
+markdownContent s =
+    [ Grid.row [] [ Grid.col [] [ Markdown.toHtml [] s ] ] ]
+
+
 viewContents : Model -> List (Html Msg)
 viewContents model =
     case model.page of
@@ -248,7 +257,7 @@ viewContents model =
             List.map (\f -> f model) [ sessionCard, playerCard, mediaCard ]
 
         About ->
-            List.singleton <| Markdown.toHtml [] """
+            markdownContent """
 ## About
 
 This page makes use of the Chromecast sender API to control Chromecasts on your local network. It provides a web interface rather than requiring you to install a native app on your devices. Links you load are accessed directly by the Chromecast.
@@ -259,7 +268,7 @@ This site only serves code to control your Chromecasts. There is no communicatio
 """
 
         Dev ->
-            List.singleton <| Markdown.toHtml [] """
+            markdownContent """
 ## Developers
 
 You can link to this site and automatically fill the proposed media URLs by including a fragment in the link. A fragment is the part after a <code>#</code> in URL. For example <code>https://chromecast.link#title=Title&subtitle=Subtitle&poster=http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg&content=http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4</code>
