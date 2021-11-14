@@ -1,7 +1,0 @@
-[submodule "elm/elm-bootstrap"]
-	path = elm/elm-bootstrap
-	url = https://github.com/anacrolix/elm-bootstrap
-[submodule "elm/html-escape-sequences"]
-	path = elm/html-escape-sequences
-	url = https://github.com/anacrolix/html-escape-sequences
-	branch = elm-0.18
