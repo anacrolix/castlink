@@ -6722,6 +6722,21 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
+var $rundis$elm_bootstrap$Bootstrap$CDN$fontAwesome = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css')
+		]),
+	_List_Nil);
 var $rundis$elm_bootstrap$Bootstrap$Navbar$Item = function (a) {
 	return {$: 'Item', a: a};
 };
@@ -6765,6 +6780,15 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $rundis$elm_bootstrap$Bootstrap$CDN$stylesheet = A3(
+	$elm$html$Html$node,
+	'link',
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$rel('stylesheet'),
+			$elm$html$Html$Attributes$href('https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
+		]),
+	_List_Nil);
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $elm$html$Html$button = _VirtualDom_node('button');
@@ -10507,6 +10531,8 @@ var $author$project$CastLink$view = function (model) {
 	return {
 		body: _List_fromArray(
 			[
+				$rundis$elm_bootstrap$Bootstrap$CDN$stylesheet,
+				$rundis$elm_bootstrap$Bootstrap$CDN$fontAwesome,
 				A2(
 				$rundis$elm_bootstrap$Bootstrap$Grid$container,
 				_List_Nil,
@@ -10520,6 +10546,7 @@ var $author$project$CastLink$view = function (model) {
 								$rundis$elm_bootstrap$Bootstrap$Navbar$items,
 								_List_fromArray(
 									[
+										A2(navItem, $author$project$CastLink$Caster, 'Link caster'),
 										A2(navItem, $author$project$CastLink$About, 'About'),
 										A2(navItem, $author$project$CastLink$Dev, 'API'),
 										A2(
