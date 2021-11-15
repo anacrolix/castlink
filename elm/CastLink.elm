@@ -1,5 +1,7 @@
 module CastLink exposing (..)
 
+--import Debug exposing (..)
+
 import Basics018 exposing (..)
 import Bootstrap exposing (..)
 import Bootstrap.Alert as Alert
@@ -15,7 +17,6 @@ import Bootstrap.Navbar as Navbar
 import Browser exposing (..)
 import Browser.Navigation
 import Cast exposing (..)
-import Debug exposing (..)
 import ElmEscapeHtml
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -85,9 +86,6 @@ type alias MouseoverEvent =
 init : () -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
-        _ =
-            Debug.log "init location" url
-
         ( navbarState, navbarCmd ) =
             Navbar.initialState NavbarMsg
     in
@@ -156,9 +154,6 @@ internalPageLink page =
 parseQuerySpec : String -> Cast.Media
 parseQuerySpec query =
     let
-        _ =
-            Debug.log "query" query
-
         specQuery =
             parseQuery query
 
@@ -171,13 +166,12 @@ parseQuerySpec query =
         all_ key =
             specQuery |> Query.all key |> justList |> List.map decode
     in
-    Debug.log "query spec" <|
-        Cast.Media
-            (first_ "content")
-            (first_ "title")
-            (first_ "subtitle")
-            (first_ "poster")
-            (all_ "subtitles")
+    Cast.Media
+        (first_ "content")
+        (first_ "title")
+        (first_ "subtitle")
+        (first_ "poster")
+        (all_ "subtitles")
 
 
 subscriptions : Model -> Sub Msg
@@ -600,7 +594,7 @@ progress model =
                             [ class "progress-bar"
                             , style
                                 "width"
-                                ((toString <| 100 * media.currentTime / duration) ++ "%")
+                                ((String.fromFloat <| 100 * media.currentTime / duration) ++ "%")
                             ]
                             []
                     ]
@@ -633,7 +627,7 @@ secsToHhmmss s =
                     s // q
 
         format =
-            String.padLeft 2 '0' << toString << extract
+            String.padLeft 2 '0' << String.fromInt << extract
     in
     String.join ":" <|
         List.map format
@@ -650,10 +644,10 @@ traceDecoder decoder =
             (\value ->
                 case JD.decodeValue decoder value of
                     Ok decoded ->
-                        JD.succeed <| Debug.log "herp" decoded
+                        JD.succeed <| decoded
 
                     Err err ->
-                        JD.fail <| JD.errorToString <| Debug.log "error" <| err
+                        JD.fail <| JD.errorToString err
             )
 
 
@@ -718,7 +712,7 @@ progressHoverPopup e =
         [ style
             "position"
             "absolute"
-        , style "left" <| toString e.offsetX
+        , style "left" <| String.fromFloat e.offsetX
         ]
         [ text "herp" ]
 
@@ -765,10 +759,6 @@ type alias UpdateFn msg model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "update" msg
-    in
     chainUpdates msg model [ mainUpdate, setOptions ]
 
 
@@ -819,10 +809,6 @@ mainUpdate msg model =
             ( model, Cast.requestSession () )
 
         UrlChange loc ->
-            let
-                _ =
-                    log "UrlChange" loc
-            in
             ( { model | proposedMedia = locationMediaSpec loc, page = internalPageForUrl loc }, Cmd.none )
 
         Navigate request ->

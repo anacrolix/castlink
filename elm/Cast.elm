@@ -97,8 +97,8 @@ castStateFromString s =
         "CONNECTED" ->
             Connected
 
-        uff ->
-            Debug.log uff NotConnected
+        _ ->
+            NotConnected
 
 
 toPlayerState : String -> PlayerState
@@ -116,8 +116,8 @@ toPlayerState s =
         "BUFFERING" ->
             Buffering
 
-        uff ->
-            Debug.log uff Idle
+        _ ->
+            Idle
 
 
 port onGCastApiAvailability : (ApiAvailability -> msg) -> Sub msg
