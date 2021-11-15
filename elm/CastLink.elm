@@ -241,7 +241,14 @@ cardHeader s =
 
 markdownContent : String -> List (Html Msg)
 markdownContent s =
-    [ Grid.row [] [ Grid.col [] [ Markdown.toHtml [] s ] ] ]
+    let
+        defaultOptions =
+            Markdown.defaultOptions
+
+        options =
+            { defaultOptions | sanitize = False }
+    in
+    [ Grid.row [] [ Grid.col [] [ Markdown.toHtmlWith options [] s ] ] ]
 
 
 viewContents : Model -> List (Html Msg)
