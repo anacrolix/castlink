@@ -628,7 +628,7 @@ secsToHhmmss s =
         extract ( q, mm ) =
             case mm of
                 Just m ->
-                    modBy (s // q) m
+                    modBy m <| s // q
 
                 Nothing ->
                     s // q
