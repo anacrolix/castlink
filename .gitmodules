@@ -1,0 +1,3 @@
+[submodule "elm/elm-bootstrap"]
+	path = elm/elm-bootstrap
+	url = https://github.com/anacrolix/elm-bootstrap

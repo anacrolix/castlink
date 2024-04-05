@@ -2,6 +2,7 @@ MAKE_CASTLINK = elm make Castlink.elm --output $@
 ELM_MAKE_ARGS = --optimize
 ELM_JS = ../docs/elm.js
 ELM_MIN_JS = ../docs/elm.min.js
+UGLIFY = yes
 
 all: $(ELM_MIN_JS)
 
@@ -10,7 +11,11 @@ $(ELM_JS):
 	$(MAKE_CASTLINK) $(ELM_MAKE_ARGS)
 
 $(ELM_MIN_JS): $(ELM_JS)
+ifdef $(UGLIFY)
 	uglifyjs $^ --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output $@
+else
+	cp $^ $@
+endif
 
 format:
 	elm-format --yes *.elm

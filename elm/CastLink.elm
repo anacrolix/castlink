@@ -1,7 +1,7 @@
 module CastLink exposing (..)
 
---import Debug exposing (..)
-
+import Array exposing (Array)
+import Array.Extra as Array
 import Basics018 exposing (..)
 import Bootstrap exposing (..)
 import Bootstrap.Alert as Alert
@@ -10,8 +10,10 @@ import Bootstrap.CDN
 import Bootstrap.Card as Card
 import Bootstrap.Card.Block
 import Bootstrap.Form as Form
+import Bootstrap.Form.Checkbox as Checkbox
 import Bootstrap.Form.Input as Input
-import Bootstrap.Form.Textarea as Textarea
+import Bootstrap.Form.Radio as Radio
+import Bootstrap.Form.Textarea as Textarea exposing (textarea)
 import Bootstrap.Grid as Grid
 import Bootstrap.Navbar as Navbar
 import Browser exposing (..)
@@ -25,11 +27,15 @@ import Http
 import Json.Decode as JD exposing (..)
 import Json.Encode
 import List exposing (..)
+import List.Extra as List
 import Markdown
 import Maybe exposing (..)
 import Maybe.Extra
+import Process
 import Query exposing (..)
+import Set exposing (Set)
 import String
+import Task
 import Url
 import Url.Parser
 import Url.Parser.Query
@@ -55,14 +61,36 @@ type Msg
     | Navigate UrlRequest
     | NavbarMsg Navbar.State
     | LoadMedia
-    | ProposedMediaInput (Cast.Media -> String -> Cast.Media) String
+    | ChangeTitle String
+    | ChangeSubtitle String
+    | ChangeContentUrl String
+    | ChangePosterUrl String
     | ClickedPlayerControl Cast.PlayerAction
     | ProgressClicked Float
     | RunCmd (Cmd Msg)
-    | Update (Model -> ( Model, Cmd Msg ))
+    | SetProposedMedia ProposedMedia
     | MouseoverProgress MouseoverEvent
     | MediaLoaded (Maybe String)
     | SetPage Page
+    | Noop
+    | CheckedSubtitleTrack TrackId Bool
+    | UnlockPlayerLoadingButton
+    | TrashSubtitleTrack Int
+    | ChangeSubtitlesUrl Int String
+
+
+type alias ProposedSubtitles =
+    { raw : Cast.Subtitles
+    }
+
+
+type alias ProposedMedia =
+    { title : String
+    , subtitle : String
+    , url : String
+    , poster : String
+    , subtitles : List ProposedSubtitles
+    }
 
 
 type alias Model =
@@ -70,11 +98,13 @@ type alias Model =
     , setOptions : Bool
     , context : Maybe Cast.Context
     , navbarState : Navbar.State
-    , proposedMedia : Cast.Media
+    , proposedMedia : ProposedMedia
     , progressHover : Maybe MouseoverEvent
     , loadingMedia : Bool
+    , lockLoadingButton : Bool
     , page : Page
     , navKey : Browser.Navigation.Key
+    , activeTrackIds : Set Int
     }
 
 
@@ -98,12 +128,14 @@ init flags url key =
       , loadingMedia = False
       , page = Caster
       , navKey = key
+      , activeTrackIds = Set.empty
+      , lockLoadingButton = False
       }
     , navbarCmd
     )
 
 
-locationMediaSpec : Url.Url -> Cast.Media
+locationMediaSpec : Url.Url -> ProposedMedia
 locationMediaSpec loc =
     withDefault "" loc.fragment |> parseQuerySpec
 
@@ -151,7 +183,7 @@ internalPageLink page =
             devPath
 
 
-parseQuerySpec : String -> Cast.Media
+parseQuerySpec : String -> ProposedMedia
 parseQuerySpec query =
     let
         specQuery =
@@ -171,7 +203,10 @@ parseQuerySpec query =
         (first_ "title")
         (first_ "subtitle")
         (first_ "poster")
-        (all_ "subtitles")
+        (all_ "subtitles"
+            |> List.map (\id -> { trackId = 1, trackContentId = id, language = defaultSubtitlesLanguage, name = Nothing })
+        )
+        |> proposedMediaFromCastMedia
 
 
 subscriptions : Model -> Sub Msg
@@ -393,24 +428,44 @@ mediaCard model =
                 Nothing ->
                     False
 
-        loadButton =
-            Button.button
-                [ Button.primary
-                , Button.onClick LoadMedia
-                , Button.attrs [ disabled <| not haveSession || Just proposedMedia == loadedMedia model.context || model.loadingMedia ]
-                ]
-            <|
-                if model.loadingMedia then
-                    iconAndText [ "pulse", "spinner" ] "Loading"
+        loadingButton =
+            if model.loadingMedia then
+                Just <|
+                    Button.button
+                        [ Button.info
+                        , Button.attrs [ disabled <| not haveSession || proposedMediaMatchesLoaded model || model.lockLoadingButton ]
+                        ]
+                    <|
+                        iconAndText
+                            [ "pulse", "spinner" ]
+                            "Loading"
 
-                else
-                    iconAndText [ "external-link" ] "Load into Player"
+            else
+                Nothing
+
+        loadButton =
+            if model.loadingMedia || model.lockLoadingButton then
+                Nothing
+
+            else
+                Just <|
+                    Button.button
+                        [ if model.loadingMedia then
+                            Button.warning
+
+                          else
+                            Button.primary
+                        , Button.onClick LoadMedia
+                        , Button.attrs [ disabled <| not haveSession || proposedMediaMatchesLoaded model || model.lockLoadingButton || model.proposedMedia.url == "" ]
+                        ]
+                    <|
+                        iconAndText [ "external-link" ] "Load into Player"
 
         setExample =
             Button.button
                 [ Button.secondary
-                , Button.onClick <| Update <| \m -> ( { m | proposedMedia = Cast.exampleMedia }, Cmd.none )
-                , Button.attrs [ disabled <| proposedMedia == Cast.exampleMedia ]
+                , Button.onClick <| SetProposedMedia exampleMedia
+                , Button.attrs [ disabled <| proposedMedia == exampleMedia ]
                 ]
             <|
                 iconAndText [ "question" ] "Set example"
@@ -419,12 +474,10 @@ mediaCard model =
             Button.button
                 [ Button.secondary
                 , Button.onClick <|
-                    Update <|
-                        \m ->
-                            ( withDefault m <| Maybe.map (\media -> { m | proposedMedia = media }) <| loadedMedia m.context
-                            , Cmd.none
-                            )
-                , Button.attrs [ disabled <| Just model.proposedMedia == loadedMedia model.context ]
+                    Maybe.withDefault Noop <|
+                        Maybe.map (SetProposedMedia << proposedMediaFromCastMedia) <|
+                            loadedMedia model.context
+                , Button.attrs [ disabled <| proposedMediaMatchesLoaded model ]
                 ]
             <|
                 iconAndText [ "copy" ] "Copy loaded"
@@ -438,35 +491,32 @@ mediaCard model =
                 [ Form.group []
                     [ Form.label [] [ text "Title" ]
                     , Input.text
-                        [ Input.onInput <| ProposedMediaInput <| \m s -> { m | title = s }
+                        [ Input.onInput ChangeTitle
                         , Input.value pm.title
                         ]
                     ]
                 , Form.group []
                     [ Form.label [] [ text "Subtitle" ]
                     , Input.text
-                        [ Input.onInput <| ProposedMediaInput <| \m s -> { m | subtitle = s }
+                        [ Input.onInput ChangeSubtitle
                         , Input.value pm.subtitle
                         ]
                     ]
                 , Form.group []
                     [ Form.label [] [ text "Content URL" ]
                     , Textarea.textarea
-                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | url = s }
+                        [ Textarea.onInput ChangeContentUrl
                         , Textarea.value pm.url
                         ]
                     ]
                 , Form.group []
-                    [ Form.label [] [ text "Subtitles URL" ]
-                    , Textarea.textarea
-                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | subtitles = [ s ] }
-                        , Textarea.value <| Maybe.withDefault "" <| List.head pm.subtitles
-                        ]
-                    ]
+                    ([ Form.label [] [ text "Subtitles URL" ] ]
+                        ++ playerSubtitlesHtml model
+                    )
                 , Form.group []
                     [ Form.label [] [ text "Poster URL" ]
                     , Textarea.textarea
-                        [ Textarea.onInput <| ProposedMediaInput <| \m s -> { m | poster = s }
+                        [ Textarea.onInput ChangePosterUrl
                         , Textarea.value pm.poster
                         ]
                     ]
@@ -480,11 +530,77 @@ mediaCard model =
                 [ p [] <|
                     List.intersperse
                         (text " ")
-                        [ loadButton, setExample, copyLoaded ]
+                        (Maybe.Extra.values [ loadingButton, loadButton, Just setExample, Just copyLoaded ])
                 , specForm
                 ]
             )
         |> Card.view
+
+
+justWhen cond =
+    if cond then
+        Just
+
+    else
+        always Nothing
+
+
+playerSubtitlesHtml model =
+    let
+        indeterminate =
+            Maybe.Extra.isJust (loadedMedia model.context)
+                && not (proposedMediaMatchesLoaded model)
+
+        checkbox checked trackId label =
+            Checkbox.advancedCheckbox
+                (Maybe.Extra.values
+                    [ Just <| Checkbox.id <| String.fromInt trackId
+                    , Just <| Checkbox.checked checked
+                    , Just <| Checkbox.onCheck <| CheckedSubtitleTrack trackId
+                    , Just <| Checkbox.disabled indeterminate
+
+                    -- This is the raw version, to work around https://github.com/rundis/elm-bootstrap/pull/191.
+                    --, Just <|
+                    --    Checkbox.attrs
+                    --        [ Html.Attributes.property "indeterminate" <|
+                    --            Json.Encode.bool indeterminate
+                    --        ]
+                    , justWhen indeterminate Checkbox.indeterminate
+                    ]
+                )
+            <|
+                Checkbox.label [] label
+    in
+    List.indexedMap
+        (\index s ->
+            let
+                trackId =
+                    s.raw.trackId
+            in
+            checkbox (Set.member trackId model.activeTrackIds) trackId <|
+                iconAndTextExtraAttrs [ "trash" ] [ Html.Events.onClick <| TrashSubtitleTrack index ] ""
+                    ++ [ Input.text
+                            [ Input.value <| withDefault "" s.raw.name ]
+                       , Input.text [ Input.value s.raw.language ]
+                       , Input.url [ Input.value s.raw.trackContentId, Input.onInput <| ChangeSubtitlesUrl index ]
+                       ]
+        )
+        model.proposedMedia.subtitles
+
+
+activeTrackIdsFromContext : Cast.Context -> Maybe (List Int)
+activeTrackIdsFromContext =
+    .session
+        >> Maybe.andThen .media
+        >> Maybe.map .activeTrackIds
+
+
+trackIdIsActive : Int -> Model -> Bool
+trackIdIsActive id =
+    .context
+        >> Maybe.andThen activeTrackIdsFromContext
+        >> Maybe.withDefault []
+        >> member id
 
 
 justList : List (Maybe a) -> List a
@@ -503,7 +619,17 @@ justList =
 
 iconAndText : List String -> String -> List (Html msg)
 iconAndText classes text =
-    [ i (class "fa" :: List.map (\c -> class <| "fa-" ++ c) classes) []
+    iconAndTextExtraAttrs classes [] text
+
+
+iconAndTextExtraAttrs : List String -> List (Html.Attribute msg) -> String -> List (Html msg)
+iconAndTextExtraAttrs classes attrs text =
+    [ i
+        (class "fa"
+            :: List.map (\c -> class <| "fa-" ++ c) classes
+            ++ attrs
+        )
+        []
     , Html.text " "
     , Html.text text
     ]
@@ -796,18 +922,42 @@ type alias Updater model msg =
 
 mainUpdate : Msg -> Model -> ( Model, Cmd Msg )
 mainUpdate msg model =
+    let
+        updateProposedMedia : (ProposedMedia -> ProposedMedia) -> ( Model, Cmd Msg )
+        updateProposedMedia mediaUpdater =
+            ( { model | proposedMedia = mediaUpdater model.proposedMedia }, Cmd.none )
+    in
     case msg of
         ApiAvailability api ->
             ( { model | api = api }, Cmd.none )
 
         CastContext jsContext ->
             let
-                context =
+                elmContext =
                     Cast.fromJsContext jsContext
+
+                newModel =
+                    { model
+                        | context = Just elmContext
+                        , loadingMedia =
+                            model.loadingMedia
+                                -- Unset when a media session appears.
+                                && (elmContext.session |> Maybe.andThen .media |> Maybe.Extra.isNothing)
+                    }
             in
-            ( { model
-                | context = Just <| Cast.fromJsContext jsContext
-                , loadingMedia = model.loadingMedia && Maybe.Extra.isJust context.session
+            ( { newModel
+                | activeTrackIds =
+                    -- If the proposed media matches what is loaded, clobber the local with what's
+                    -- active on the receiver.
+                    if proposedMediaMatchesLoaded newModel then
+                        activeTrackIdsFromContext elmContext
+                            |> Maybe.withDefault []
+                            |> Set.fromList
+
+                    else
+                        newModel.activeTrackIds
+
+                --, activeTrackIds = activeTrackIdsFromContext context |> Maybe.withDefault [] |> Set.fromList
               }
             , Cmd.none
             )
@@ -830,10 +980,30 @@ mainUpdate msg model =
             ( { model | navbarState = state }, Cmd.none )
 
         LoadMedia ->
-            ( { model | loadingMedia = True }, Cast.loadMedia model.proposedMedia )
+            ( { model | loadingMedia = True }
+            , Cmd.batch
+                [ Cast.loadMedia <| { media = castMediaFromProposedMedia model.proposedMedia, activeTrackIds = Set.toList model.activeTrackIds }
+                , Process.sleep 3000 |> Task.perform (always UnlockPlayerLoadingButton)
+                ]
+            )
 
-        ProposedMediaInput mediaUpdater s ->
-            ( { model | proposedMedia = mediaUpdater model.proposedMedia s }, Cmd.none )
+        ChangeTitle s ->
+            updateProposedMedia <| \pm -> { pm | title = s }
+
+        ChangeSubtitle s ->
+            updateProposedMedia <| \pm -> { pm | subtitle = s }
+
+        ChangeContentUrl s ->
+            updateProposedMedia <| \pm -> { pm | url = s }
+
+        ChangePosterUrl s ->
+            updateProposedMedia <| \pm -> { pm | poster = s }
+
+        SetProposedMedia pm ->
+            updateProposedMedia <| always pm
+
+        Noop ->
+            ( model, Cmd.none )
 
         ClickedPlayerControl action ->
             ( model, Cast.controlPlayer <| Cast.toJsPlayerAction action )
@@ -851,9 +1021,6 @@ mainUpdate msg model =
         RunCmd cmd ->
             ( model, cmd )
 
-        Update run ->
-            run model
-
         MouseoverProgress e ->
             ( { model | progressHover = Just e }, Cmd.none )
 
@@ -862,6 +1029,68 @@ mainUpdate msg model =
 
         SetPage page ->
             ( { model | page = page }, Cmd.none )
+
+        CheckedSubtitleTrack id checked ->
+            let
+                f =
+                    if checked then
+                        Set.insert
+
+                    else
+                        Set.remove
+
+                newActiveTrackIds =
+                    f id model.activeTrackIds
+            in
+            ( { model
+                | activeTrackIds = newActiveTrackIds
+              }
+            , Cast.editTracks <| Set.toList newActiveTrackIds
+            )
+
+        UnlockPlayerLoadingButton ->
+            ( { model | lockLoadingButton = False }, Cmd.none )
+
+        TrashSubtitleTrack index ->
+            let
+                proposedMedia =
+                    model.proposedMedia
+            in
+            ( { model
+                | proposedMedia =
+                    { proposedMedia
+                        | subtitles =
+                            List.removeAt index proposedMedia.subtitles
+                    }
+              }
+            , Cmd.none
+            )
+
+        ChangeSubtitlesUrl index url ->
+            updateProposedMedia (updateSubtitlesIndex index (updateRawSubtitles <| \s -> { s | trackContentId = url }))
+
+
+
+--updateProposedMedia : (ProposedMedia -> ProposedMedia) -> Model -> Model
+--updateProposedMedia f model = { model | proposedMedia = f model.proposedMedia }
+
+
+updateRawSubtitles : (Subtitles -> Subtitles) -> ProposedSubtitles -> ProposedSubtitles
+updateRawSubtitles f proposedSubtitles =
+    { proposedSubtitles | raw = f proposedSubtitles.raw }
+
+
+updateSubtitlesIndex : Int -> (ProposedSubtitles -> ProposedSubtitles) -> ProposedMedia -> ProposedMedia
+updateSubtitlesIndex index f proposedMedia =
+    { proposedMedia
+        | subtitles =
+            case List.getAt index proposedMedia.subtitles of
+                Just track ->
+                    List.setAt index (f track) proposedMedia.subtitles
+
+                Nothing ->
+                    proposedMedia.subtitles
+    }
 
 
 setOptions : Msg -> Model -> ( Model, Cmd msg )
@@ -907,3 +1136,43 @@ innerHtml =
 
 email =
     "anacrolix+chromecast.link@gmail.com"
+
+
+exampleMedia : ProposedMedia
+exampleMedia =
+    { url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    , subtitle = "1280x720 h264"
+    , title = "Big Buck Bunny"
+    , poster = "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg"
+    , subtitles =
+        [ { raw = { trackId = 1, name = Just "acid", trackContentId = "/acid.vtt", language = "acid" }
+          }
+        , { raw = { trackId = 2, name = Just "de", trackContentId = "https://webtorrent.io/torrents/Sintel/Sintel.de.srt", language = "de" }
+          }
+        ]
+    }
+
+
+proposedMediaFromCastMedia : Cast.Media -> ProposedMedia
+proposedMediaFromCastMedia cast =
+    { title = cast.title
+    , subtitle = cast.subtitle
+    , url = cast.url
+    , poster = cast.poster
+    , subtitles = List.map (\s -> { raw = s }) cast.subtitles
+    }
+
+
+castMediaFromProposedMedia : ProposedMedia -> Cast.Media
+castMediaFromProposedMedia proposed =
+    { url = proposed.url
+    , title = proposed.title
+    , subtitle = proposed.subtitle
+    , poster = proposed.poster
+    , subtitles = List.map .raw proposed.subtitles
+    }
+
+
+proposedMediaMatchesLoaded : Model -> Bool
+proposedMediaMatchesLoaded model =
+    Just (castMediaFromProposedMedia model.proposedMedia) == loadedMedia model.context

@@ -1,7 +1,5 @@
 port module Cast exposing (..)
 
-import Debug
-
 
 type alias ApiAvailability =
     { loaded : Bool
@@ -19,6 +17,7 @@ type alias JsContext =
                     , currentTime : Float
                     , playerState : String
                     , spec : Media
+                    , activeTrackIds : List Int
                     }
             , deviceName : String
             }
@@ -48,6 +47,7 @@ type alias SessionMedia =
     , currentTime : Float
     , playerState : PlayerState
     , spec : Media
+    , activeTrackIds : List Int
     }
 
 
@@ -65,6 +65,7 @@ fromJsContext c =
                             , currentTime = m.currentTime
                             , playerState = toPlayerState m.playerState
                             , spec = m.spec
+                            , activeTrackIds = m.activeTrackIds
                             }
                         )
                         s.media
@@ -135,13 +136,16 @@ port requestSession : () -> Cmd msg
 port endCurrentSession : Bool -> Cmd msg
 
 
-port loadMedia : Media -> Cmd msg
+port loadMedia : LoadRequest -> Cmd msg
 
 
 port mediaLoaded : (Maybe String -> msg) -> Sub msg
 
 
 port controlPlayer : JsPlayerAction -> Cmd msg
+
+
+port editTracks : List Int -> Cmd msg
 
 
 type alias JsPlayerAction =
@@ -221,20 +225,32 @@ apiNotLoaded =
     { loaded = False, error = Nothing }
 
 
+type alias Subtitles =
+    { name : Maybe String
+    , trackContentId : String
+    , language : String
+    , trackId : TrackId
+    }
+
+
+type alias TrackId =
+    Int
+
+
+defaultSubtitlesLanguage =
+    "en-US"
+
+
 type alias Media =
     { url : String
     , title : String
     , subtitle : String
     , poster : String
-    , subtitles : List String
+    , subtitles : List Subtitles
     }
 
 
-exampleMedia : Media
-exampleMedia =
-    { url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-    , subtitle = "1280x720 h264"
-    , title = "Big Buck Bunny"
-    , poster = "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg"
-    , subtitles = []
+type alias LoadRequest =
+    { media : Media
+    , activeTrackIds : List Int
     }

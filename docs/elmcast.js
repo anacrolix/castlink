@@ -6,11 +6,11 @@ var gCastApiAvailable = new Promise((resolve, reject) => {
 			resolve({loaded, error});
 		};
 });
-function context() {
+function getContext() {
 	return cast.framework.CastContext.getInstance();
 }
-function session() {
-		return context() && context().getCurrentSession();
+function getSession() {
+		return getContext()?.getCurrentSession();
 }
 function ifTrue(value, onTrue) {
 	if (!value) return value;
@@ -30,7 +30,8 @@ function elmCastContext(c) {
 				state: s.getSessionState(),
 				media: ifTrue(s.getMediaSession(), m => {
 					return {
-						duration: undefinedToNull(m.media.duration),
+						activeTrackIds: m.activeTrackIds ?? [],
+						duration: m.media?.duration ?? null,
 						currentTime: m.getEstimatedTime(),
 						playerState: m.playerState,
 						spec: (() => {
@@ -38,7 +39,14 @@ function elmCastContext(c) {
 							const md = mi.metadata;
 							return {
 								url: m.media.contentId,
-								subtitles: ifTrue(mi.tracks, ts => ts.filter(t => typeof t.trackContentId == 'string').map(t => t.trackContentId)),
+								subtitles: ifTrue(mi.tracks, ts => ts
+									.filter(t => typeof t.trackContentId == 'string')
+									.map(t => ({
+										trackContentId: t.trackContentId,
+										language: t.language,
+										name: t.name ?? null,
+										trackId: t.trackId,
+									}))),
 								poster: md.images?.[0].url ?? '',
 								title: md.title ?? '',
 								subtitle: md.subtitle,
@@ -52,9 +60,10 @@ function elmCastContext(c) {
 	};
 }
 function sendContext() {
-	const c = elmCastContext(context());
-	console.log('sending context', c);
-	app.ports.context.send(c);
+	const context = getContext();
+	const elm = elmCastContext(context);
+	console.log('sending context, elm', elm, 'js', context);
+	app.ports.context.send(elm);
 }
 function initRemotePlayer() {
 	rp = new cast.framework.RemotePlayer();
@@ -68,9 +77,17 @@ function remotePlayerChanged(event) {
 gCastApiAvailable.then(value => {
 	console.log('sending api availability', value)
 	app.ports.onGCastApiAvailability.send(value)
-	context().addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, sendContext);
-	context().addEventListener(cast.framework.CastContextEventType.SESSION_STATE_CHANGED, sendContext);
-	initRemotePlayer();
+	const context = getContext();
+	context.addEventListener(
+		cast.framework.CastContextEventType.CAST_STATE_CHANGED,
+		(event) => {
+			console.log('cast state changed', event);
+			initRemotePlayer();
+			sendContext();
+		});
+	context.addEventListener(
+		cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+		logEventAndSendContext('session state changed'));
 	sendContext();
 })
 app.ports.setOptions.subscribe(options => {
@@ -78,44 +95,53 @@ app.ports.setOptions.subscribe(options => {
 	cast.framework.CastContext.getInstance().setOptions(options);
 })
 app.ports.requestSession.subscribe(() => {
-	context().requestSession().then(result => {
+	getContext().requestSession().then(result => {
 		console.log('request session fullfilled:', result);
+		getSession().addEventListener(cast.framework.SessionEventType.MEDIA_SESSION, (event) => {
+			console.log('cast session media session changed');
+			sendContext();
+		});
+		getSession().addEventListener(cast.framework.SessionEventType.APPLICATION_STATUS_CHANGED, (event) => {
+			console.log('session application status changed', event.status);
+			sendContext();
+		});
+		sendContext();
 	}, err => {
 		console.log('request session rejected:', err);
+		sendContext();
 	});
 })
-app.ports.loadMedia.subscribe(spec => {
-	var url = spec.url;
-	var title = spec.title;
-	var subtitle = spec.subtitle;
-	var poster = spec.poster;
-	var mediaInfo = new chrome.cast.media.MediaInfo(url, 'video/mp4');
-	mediaInfo.tracks = spec.subtitles.map((val, i) => {
-		var subs = new chrome.cast.media.Track(i+1, chrome.cast.media.TrackType.TEXT);
-		subs.trackContentId = val;
-		subs.trackContentType = 'text/vtt';
-		subs.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
-		subs.language = 'en-US';
-		return subs;
+app.ports.loadMedia.subscribe(elmRequest => {
+	const spec = elmRequest.media;
+	const url = spec.url;
+	const title = spec.title;
+	const subtitle = spec.subtitle;
+	const poster = spec.poster;
+	const mediaInfo = new chrome.cast.media.MediaInfo(url, 'video/mp4');
+	mediaInfo.tracks = spec.subtitles.map((val) => {
+		const track = new chrome.cast.media.Track(val.trackId, chrome.cast.media.TrackType.TEXT);
+		track.trackContentId = val.trackContentId;
+		track.trackContentType = 'text/vtt';
+		track.subtype = chrome.cast.media.TextTrackType.SUBTITLES;
+		track.language = val.language ?? 'en-US';
+		track.name = val.name;
+		return track;
 	});
-	var metadata = new chrome.cast.media.GenericMediaMetadata();
+	const metadata = new chrome.cast.media.GenericMediaMetadata();
 	if (poster) {
-			metadata.images = [new chrome.cast.Image(poster)];
+		metadata.images = [new chrome.cast.Image(poster)];
 	}
 	metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
 	if (title) {
-			metadata.title = title;
+		metadata.title = title;
 	}
 	metadata.subtitle = subtitle || url;
 	mediaInfo.metadata = metadata;
 	mediaInfo.textTrackStyle = new chrome.cast.media.TextTrackStyle();
-	var request = new chrome.cast.media.LoadRequest(mediaInfo);
-	if (mediaInfo.tracks.length) {
-			request.activeTrackIds = [1];
-	}
-	request.autoplay = true;
-	loading = true;
-	session().loadMedia(request).then(() => {
+	const request = new chrome.cast.media.LoadRequest(mediaInfo);
+	request.activeTrackIds = elmRequest.activeTrackIds;
+	request.autoplay = false;
+	getSession().loadMedia(request).then(() => {
 		sendMediaLoaded(null);
 	}, (e) => {
 		console.log('error loading media', e);
@@ -137,8 +163,28 @@ app.ports.controlPlayer.subscribe(action => {
 	}
 });
 app.ports.endCurrentSession.subscribe(stopCasting => {
-	context().endCurrentSession(stopCasting);
+	getContext().endCurrentSession(stopCasting);
 });
+
+app.ports.editTracks.subscribe(activeTrackIds => {
+	const request = new chrome.cast.media.EditTracksInfoRequest(activeTrackIds);
+	const ms = getSession()?.getMediaSession();
+	if (!ms) {
+		console.log('error editing tracks, no media session');
+		return;
+	}
+	ms.editTracksInfo(request, function() {
+		console.log('success editing tracks', activeTrackIds);
+	}, function(e) {
+		console.log('error editing tracks', e);
+	})
+})
+
 function sendMediaLoaded(e) {
 	app.ports.mediaLoaded.send(e);
+}
+
+const logEventAndSendContext = (msg) => (event) => {
+	console.log(msg, event);
+	sendContext();
 }
