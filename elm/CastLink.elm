@@ -597,10 +597,13 @@ mediaCard model =
                     ]
                 , Form.group []
                     [ Form.label [] [ text "Content URL" ]
-                    , Textarea.textarea
-                        [ Textarea.onInput ChangeContentUrl
-                        , Textarea.value pm.url
-                        ]
+                    , Textarea.textarea <|
+                        List.concat
+                            [ [ Textarea.onInput ChangeContentUrl
+                              , Textarea.value pm.url
+                              ]
+                            , urlTextareaAttrsOptions
+                            ]
                     ]
                 , Form.group []
                     ([ div
@@ -614,9 +617,11 @@ mediaCard model =
                 , Form.group []
                     [ Form.label [] [ text "Poster URL" ]
                     , Textarea.textarea
-                        [ Textarea.onInput ChangePosterUrl
-                        , Textarea.value pm.poster
-                        ]
+                        ([ Textarea.onInput ChangePosterUrl
+                         , Textarea.value pm.poster
+                         ]
+                            ++ urlTextareaAttrsOptions
+                        )
                     ]
                 ]
     in
@@ -645,21 +650,23 @@ justWhen cond =
 
 formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs checkMsg =
     Html.div
-        [ class "form-check"
+        [ class "form-group"
         , class "custom-control"
         , class "custom-switch"
         , onClick <| checkMsg <| not checked
         ]
         [ Html.input
-            [ class "custom-control-input"
-            , type_ "checkbox"
-            , Html.Attributes.checked checked
-            , Html.Attributes.property "indeterminate" <| Json.Encode.bool indeterminate
-            , attribute "ariaLabel" ariaLabel_
-            , Html.Attributes.id id
-            ]
+            ([ class "custom-control-input"
+             , type_ "checkbox"
+             , Html.Attributes.checked checked
+             , Html.Attributes.property "indeterminate" <| Json.Encode.bool indeterminate
+             , attribute "ariaLabel" ariaLabel_
+             , Html.Attributes.id id
+             ]
+                ++ attrs
+            )
             []
-        , label [ class "custom-control-label" ] []
+        , label [ class "custom-control-label" ] [ text "Active" ]
         ]
 
 
@@ -708,74 +715,70 @@ playerSubtitlesHtml model =
                 col =
                     Form.col
             in
-            Form.row []
+            Form.row [ Grid.attrs [ class "form-row" ] ]
                 [ col
                     [ Col.xsAuto
                     , Col.attrs
                         [ Bootstrap.Utilities.Flex.alignSelfCenter
-                        , -- Prevent the checkbox from taking up more space than it should horizontally.
-                          Html.Attributes.style "width" "0"
+
+                        -- Prevent the checkbox from taking up more space than it should horizontally.
+                        --Html.Attributes.style "width" "0"
                         ]
                     ]
                     [ checkbox (Set.member trackId model.activeTrackIds) trackId name ]
-                , col []
-                    [ Form.row
-                        [ Grid.attrs
-                            [ -- We don't want this margin included in the vertical alignment for the
-                              -- checkbox
-                              Html.Attributes.style "margin-bottom" "0"
-                            , Html.Attributes.class "form-row"
-                            ]
+                , colGroup [ Col.smAuto ]
+                    [ Input.text
+                        [ Input.value <| name
+                        , Input.placeholder "name"
                         ]
-                        [ colGroup [ Col.md8 ]
-                            [ Input.text
-                                [ Input.value <| name
-                                , Input.placeholder "name"
-                                ]
-                            ]
-                        , colGroup [ Col.xs4 ]
-                            [ Input.text
-                                [ Input.value s.raw.language
-                                , Input.placeholder "language"
-                                ]
-                            ]
-                        , colGroup
-                            [ Col.xsAuto
-                            , Col.attrs
-                                [--Bootstrap.Utilities.Flex.alignSelfCenter
-                                 --, Html.Attributes.style "margin-left" "15"
-                                ]
-                            ]
-                            [ Button.button
-                                [ Button.secondary
-                                , Button.light
-                                , Button.onClick <| TrashSubtitleTrack index
-                                ]
-                              <|
-                                iconAndTextExtraAttrs [ "trash" ] [] "Remove"
-                            ]
-                        , colGroup [ Col.xs12 ]
-                            [ Textarea.textarea
-                                [ Textarea.value s.raw.trackContentId
-                                , Textarea.onInput <| ChangeSubtitlesUrl index
-                                , Textarea.attrs
-                                    [ Html.Attributes.placeholder "url"
-                                    , Html.Attributes.class "text-monospace"
-                                    , Html.Attributes.style "word-break" "break-all"
-
-                                    -- Can't use the small class since it gets clobbered by
-                                    -- form-control class.
-                                    , Html.Attributes.style "font-size" "80%"
-                                    ]
-
-                                --, Textarea.rows 2
-                                ]
-                            ]
+                    ]
+                , colGroup [ Col.smAuto ]
+                    [ Input.text
+                        [ Input.value s.raw.language
+                        , Input.placeholder "language"
                         ]
+                    ]
+                , colGroup
+                    [ Col.xsAuto
+                    , Col.attrs
+                        [--Bootstrap.Utilities.Flex.alignSelfCenter
+                         --, Html.Attributes.style "margin-left" "15"
+                        ]
+                    ]
+                    [ Button.button
+                        [ Button.secondary
+                        , Button.light
+                        , Button.onClick <| TrashSubtitleTrack index
+                        ]
+                      <|
+                        iconAndTextExtraAttrs [ "trash" ] [] "Remove"
+                    ]
+                , colGroup [ Col.xs12 ]
+                    [ Textarea.textarea
+                        ([ Textarea.value s.raw.trackContentId
+                         , Textarea.onInput <| ChangeSubtitlesUrl index
+                         ]
+                            ++ urlTextareaAttrsOptions
+                        )
                     ]
                 ]
         )
         model.proposedMedia.subtitles
+
+
+urlTextareaAttrsOptions =
+    [ Textarea.attrs
+        [ Html.Attributes.placeholder "url"
+        , Html.Attributes.class "text-monospace"
+        , Html.Attributes.style "word-break" "break-all"
+
+        -- Can't use the small class since it gets clobbered by
+        -- form-control class.
+        , Html.Attributes.style "font-size" "80%"
+        ]
+
+    --, Textarea.rows 2
+    ]
 
 
 activeTrackIdsFromContext : Cast.Context -> Maybe (List Int)
