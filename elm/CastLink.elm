@@ -643,22 +643,23 @@ justWhen cond =
         always Nothing
 
 
-formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs =
-    Html.div [ class "form-check" ]
+formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs checkMsg =
+    Html.div
+        [ class "form-check"
+        , class "custom-control"
+        , class "custom-switch"
+        , onClick <| checkMsg <| not checked
+        ]
         [ Html.input
-            ([ class "form-check-input"
-             , class "position-static"
-             , type_ "checkbox"
-             , Html.Attributes.checked checked
-             , Html.Attributes.property "indeterminate" <| Json.Encode.bool indeterminate
-             , attribute "ariaLabel" ariaLabel_
-             , Html.Attributes.id id
-             ]
-                ++ attrs
-            )
+            [ class "custom-control-input"
+            , type_ "checkbox"
+            , Html.Attributes.checked checked
+            , Html.Attributes.property "indeterminate" <| Json.Encode.bool indeterminate
+            , attribute "ariaLabel" ariaLabel_
+            , Html.Attributes.id id
+            ]
             []
-
-        --, label [ class "custom-control-label" ] []
+        , label [ class "custom-control-label" ] []
         ]
 
 
@@ -678,6 +679,7 @@ playerSubtitlesHtml model =
                 [ Html.Events.onCheck <| CheckedSubtitleTrack trackId
                 , Html.Attributes.style "margin-top" "0"
                 ]
+                (CheckedSubtitleTrack trackId)
 
         --Checkbox.advancedCheckbox
         --    (Maybe.Extra.values
@@ -903,6 +905,7 @@ progress model =
 
         elem : Cast.SessionMedia -> Float -> Html Msg
         elem media duration =
+            -- TODO: Use a Bootstrap range input, with ticks for regular intervals of the media.
             div
                 [ class "progress"
                 , Html.Events.on "click" decodeProgressClick
