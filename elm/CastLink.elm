@@ -15,7 +15,10 @@ import Bootstrap.Form.Input as Input
 import Bootstrap.Form.Radio as Radio
 import Bootstrap.Form.Textarea as Textarea exposing (textarea)
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Grid
 import Bootstrap.Navbar as Navbar
+import Bootstrap.Utilities.Flex
 import Browser exposing (..)
 import Browser.Navigation
 import Cast exposing (..)
@@ -105,6 +108,7 @@ type alias Model =
     , page : Page
     , navKey : Browser.Navigation.Key
     , activeTrackIds : Set Int
+    , errors : List JD.Error
     }
 
 
@@ -123,21 +127,48 @@ init flags url key =
       , setOptions = False
       , context = Nothing
       , navbarState = navbarState
-      , proposedMedia = locationMediaSpec url
+      , proposedMedia = exampleMedia
       , progressHover = Nothing
       , loadingMedia = False
       , page = Caster
       , navKey = key
       , activeTrackIds = Set.empty
       , lockLoadingButton = False
+      , errors = []
       }
+        |> updateUrl url
     , navbarCmd
     )
 
 
-locationMediaSpec : Url.Url -> ProposedMedia
+updateUrl : Url.Url -> Model -> Model
+updateUrl url model =
+    let
+        ( errors, proposedMedia ) =
+            locationMediaSpec url
+    in
+    { model
+        | proposedMedia =
+            case proposedMedia of
+                Just pm ->
+                    pm
+
+                Nothing ->
+                    if List.isEmpty errors then
+                        exampleMedia
+
+                    else
+                        emptyProposedMedia
+        , page = internalPageForUrl url
+        , errors = errors
+    }
+
+
+locationMediaSpec : Url.Url -> ( List JD.Error, Maybe ProposedMedia )
 locationMediaSpec loc =
-    withDefault "" loc.fragment |> parseQuerySpec
+    loc.fragment
+        |> Maybe.map (parseQuerySpec >> Tuple.mapSecond Just)
+        |> Maybe.withDefault ( [], Nothing )
 
 
 internalPageForUrl : Url.Url -> Page
@@ -183,7 +214,14 @@ internalPageLink page =
             devPath
 
 
-parseQuerySpec : String -> ProposedMedia
+type alias SubtitlesWithoutTrackId =
+    { language : String
+    , trackContentId : String
+    , name : Maybe String
+    }
+
+
+parseQuerySpec : String -> ( List JD.Error, ProposedMedia )
 parseQuerySpec query =
     let
         specQuery =
@@ -197,16 +235,65 @@ parseQuerySpec query =
 
         all_ key =
             specQuery |> Query.all key |> justList |> List.map decode
+
+        trackDecoder =
+            JD.map3
+                (\src lang name ->
+                    { language = withDefault "" lang
+                    , trackContentId = src
+                    , name = name
+                    }
+                )
+                (JD.field "src" JD.string)
+                (JD.maybe <| JD.field "lang" JD.string)
+                (JD.maybe <| JD.field "name" JD.string)
+
+        oldStyleSubtitles =
+            all_ "subtitles"
+                |> List.map
+                    (\id ->
+                        { trackContentId = id
+                        , language = defaultSubtitlesLanguage
+                        , name = Nothing
+                        }
+                    )
+
+        --newStyleSubtitles : ( List JD.Error, List Cast.Subtitles )
+        ( errors, newStyleSubtitles ) =
+            all_ "track"
+                |> List.map (JD.decodeString trackDecoder)
+                |> List.foldr
+                    (\result ( errors_, subs ) ->
+                        case result of
+                            Ok value ->
+                                ( errors_, value :: subs )
+
+                            Err error ->
+                                ( error :: errors_, subs )
+                    )
+                    ( [], [] )
+
+        addTrackIds =
+            List.indexedMap <|
+                \index track ->
+                    { trackId = index + 1
+                    , name = track.name
+                    , trackContentId = track.trackContentId
+                    , language = track.language
+                    }
+
+        --errors =
+        --    Tuple.first newStyleSubtitles
     in
-    Cast.Media
+    ( errors
+    , Cast.Media
         (first_ "content")
         (first_ "title")
         (first_ "subtitle")
         (first_ "poster")
-        (all_ "subtitles"
-            |> List.map (\id -> { trackId = 1, trackContentId = id, language = defaultSubtitlesLanguage, name = Nothing })
-        )
+        (addTrackIds <| oldStyleSubtitles ++ newStyleSubtitles)
         |> proposedMediaFromCastMedia
+    )
 
 
 subscriptions : Model -> Sub Msg
@@ -283,7 +370,14 @@ markdownContent s =
         options =
             { defaultOptions | sanitize = False }
     in
-    [ Grid.row [] [ Grid.col [] [ Markdown.toHtmlWith options [] s ] ] ]
+    [ Grid.containerFluid []
+        [ Grid.row []
+            [ Grid.col []
+                [ Markdown.toHtmlWith options [] s
+                ]
+            ]
+        ]
+    ]
 
 
 viewContents : Model -> List (Html Msg)
@@ -510,7 +604,12 @@ mediaCard model =
                         ]
                     ]
                 , Form.group []
-                    ([ Form.label [] [ text "Subtitles URL" ] ]
+                    ([ div
+                        -- This ensures there's a similar space between the header for the subtitles
+                        -- label, and the individual rows of subtitles.
+                        [ class "form-group" ]
+                        [ Form.label [] [ text "Subtitles URL" ] ]
+                     ]
                         ++ playerSubtitlesHtml model
                     )
                 , Form.group []
@@ -545,45 +644,133 @@ justWhen cond =
         always Nothing
 
 
+formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs =
+    Html.div [ class "form-check" ]
+        [ Html.input
+            ([ class "form-check-input"
+             , class "position-static"
+             , type_ "checkbox"
+             , Html.Attributes.checked checked
+             , Html.Attributes.property "indeterminate" <| Json.Encode.bool indeterminate
+             , attribute "ariaLabel" ariaLabel_
+             , Html.Attributes.id id
+             ]
+                ++ attrs
+            )
+            []
+        ]
+
+
 playerSubtitlesHtml model =
     let
         indeterminate =
-            Maybe.Extra.isJust (loadedMedia model.context)
+            Maybe.Extra.isJust
+                (loadedMedia model.context)
                 && not (proposedMediaMatchesLoaded model)
 
-        checkbox checked trackId label =
-            Checkbox.advancedCheckbox
-                (Maybe.Extra.values
-                    [ Just <| Checkbox.id <| String.fromInt trackId
-                    , Just <| Checkbox.checked checked
-                    , Just <| Checkbox.onCheck <| CheckedSubtitleTrack trackId
-                    , Just <| Checkbox.disabled indeterminate
+        checkbox checked trackId ariaLabel =
+            formCheckboxWithoutLabel
+                ariaLabel
+                checked
+                indeterminate
+                (String.fromInt trackId)
+                [ Html.Events.onCheck <| CheckedSubtitleTrack trackId
+                , Html.Attributes.style "margin-top" "0"
+                ]
 
-                    -- This is the raw version, to work around https://github.com/rundis/elm-bootstrap/pull/191.
-                    --, Just <|
-                    --    Checkbox.attrs
-                    --        [ Html.Attributes.property "indeterminate" <|
-                    --            Json.Encode.bool indeterminate
-                    --        ]
-                    , justWhen indeterminate Checkbox.indeterminate
-                    ]
-                )
-            <|
-                Checkbox.label [] label
+        --Checkbox.advancedCheckbox
+        --    (Maybe.Extra.values
+        --        [ Just <| Checkbox.id <| String.fromInt trackId
+        --        , Just <| Checkbox.checked checked
+        --        , Just <| Checkbox.onCheck <| CheckedSubtitleTrack trackId
+        --        , Just <| Checkbox.disabled indeterminate
+        --        , justWhen indeterminate Checkbox.indeterminate
+        --        ]
+        --    )
+        --<|
+        --    Checkbox.label [] label
     in
     List.indexedMap
         (\index s ->
             let
                 trackId =
                     s.raw.trackId
+
+                name =
+                    Maybe.withDefault "" s.raw.name
+
+                colGroup options =
+                    Form.col (Col.attrs [ Html.Attributes.class "form-group" ] :: options)
+
+                col =
+                    Form.col
             in
-            checkbox (Set.member trackId model.activeTrackIds) trackId <|
-                iconAndTextExtraAttrs [ "trash" ] [ Html.Events.onClick <| TrashSubtitleTrack index ] ""
-                    ++ [ Input.text
-                            [ Input.value <| withDefault "" s.raw.name ]
-                       , Input.text [ Input.value s.raw.language ]
-                       , Input.url [ Input.value s.raw.trackContentId, Input.onInput <| ChangeSubtitlesUrl index ]
-                       ]
+            Form.row []
+                [ col
+                    [ Col.xsAuto
+                    , Col.attrs
+                        [ Bootstrap.Utilities.Flex.alignSelfCenter
+                        , -- Prevent the checkbox from taking up more space than it should horizontally.
+                          Html.Attributes.style "width" "0"
+                        ]
+                    ]
+                    [ checkbox (Set.member trackId model.activeTrackIds) trackId name ]
+                , col []
+                    [ Form.row
+                        [ Grid.attrs
+                            [ -- We don't want this margin included in the vertical alignment for the
+                              -- checkbox
+                              Html.Attributes.style "margin-bottom" "0"
+                            , Html.Attributes.class "form-row"
+                            ]
+                        ]
+                        [ colGroup [ Col.md8 ]
+                            [ Input.text
+                                [ Input.value <| name
+                                , Input.placeholder "name"
+                                ]
+                            ]
+                        , colGroup [ Col.xs4 ]
+                            [ Input.text
+                                [ Input.value s.raw.language
+                                , Input.placeholder "language"
+                                ]
+                            ]
+                        , colGroup
+                            [ Col.xsAuto
+                            , Col.attrs
+                                [--Bootstrap.Utilities.Flex.alignSelfCenter
+                                 --, Html.Attributes.style "margin-left" "15"
+                                ]
+                            ]
+                            [ Button.button
+                                [ Button.secondary
+                                , Button.light
+                                , Button.onClick <| TrashSubtitleTrack index
+                                ]
+                              <|
+                                iconAndTextExtraAttrs [ "trash" ] [] "Remove"
+                            ]
+                        , colGroup [ Col.xs12 ]
+                            [ Textarea.textarea
+                                [ Textarea.value s.raw.trackContentId
+                                , Textarea.onInput <| ChangeSubtitlesUrl index
+                                , Textarea.attrs
+                                    [ Html.Attributes.placeholder "url"
+                                    , Html.Attributes.class "text-monospace"
+                                    , Html.Attributes.style "word-break" "break-all"
+
+                                    -- Can't use the small class since it gets clobbered by
+                                    -- form-control class.
+                                    , Html.Attributes.style "font-size" "80%"
+                                    ]
+
+                                --, Textarea.rows 2
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
         )
         model.proposedMedia.subtitles
 
@@ -630,9 +817,15 @@ iconAndTextExtraAttrs classes attrs text =
             ++ attrs
         )
         []
-    , Html.text " "
-    , Html.text text
     ]
+        ++ (if text == "" then
+                []
+
+            else
+                [ Html.text " "
+                , Html.text text
+                ]
+           )
 
 
 playerButtons : Cast.SessionMedia -> Html Msg
@@ -966,7 +1159,7 @@ mainUpdate msg model =
             ( model, Cast.requestSession () )
 
         UrlChange loc ->
-            ( { model | proposedMedia = locationMediaSpec loc, page = internalPageForUrl loc }, Cmd.none )
+            ( updateUrl loc model, Cmd.none )
 
         Navigate request ->
             case request of
@@ -1150,6 +1343,16 @@ exampleMedia =
         , { raw = { trackId = 2, name = Just "de", trackContentId = "https://webtorrent.io/torrents/Sintel/Sintel.de.srt", language = "de" }
           }
         ]
+    }
+
+
+emptyProposedMedia : ProposedMedia
+emptyProposedMedia =
+    { url = ""
+    , subtitle = ""
+    , title = "Title goes here"
+    , poster = ""
+    , subtitles = []
     }
 
 

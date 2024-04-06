@@ -1,0 +1,2 @@
+make-dev:
+    make ELM_MAKE_ARGS= UGLIFY=
