@@ -345,8 +345,7 @@ view model =
     in
     { title = ""
     , body =
-        [ Bootstrap.CDN.stylesheet
-        , Bootstrap.CDN.fontAwesome
+        [ Bootstrap.CDN.fontAwesome
         , Grid.container [] <|
             [ navbar
             ]
@@ -658,6 +657,8 @@ formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs =
                 ++ attrs
             )
             []
+
+        --, label [ class "custom-control-label" ] []
         ]
 
 
@@ -1175,7 +1176,10 @@ mainUpdate msg model =
         LoadMedia ->
             ( { model | loadingMedia = True }
             , Cmd.batch
-                [ Cast.loadMedia <| { media = castMediaFromProposedMedia model.proposedMedia, activeTrackIds = Set.toList model.activeTrackIds }
+                [ Cast.loadMedia <|
+                    { media = castMediaFromProposedMedia model.proposedMedia
+                    , activeTrackIds = Set.toList model.activeTrackIds
+                    }
                 , Process.sleep 3000 |> Task.perform (always UnlockPlayerLoadingButton)
                 ]
             )

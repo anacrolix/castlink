@@ -112,6 +112,7 @@ app.ports.requestSession.subscribe(() => {
 	});
 })
 app.ports.loadMedia.subscribe(elmRequest => {
+	console.log('loading media', elmRequest);
 	const spec = elmRequest.media;
 	const url = spec.url;
 	const title = spec.title;
