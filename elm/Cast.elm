@@ -198,6 +198,14 @@ originScoped =
     "origin_scoped"
 
 
+tabAndOriginScoped =
+    "tab_and_origin_scoped"
+
+
+pageScoped =
+    "page_scoped"
+
+
 type alias Options =
     { autoJoinPolicy : AutoJoinPolicy
     , language : Maybe String

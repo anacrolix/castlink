@@ -27,7 +27,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode as JD exposing (..)
+import Json.Decode as JD
 import Json.Encode
 import List exposing (..)
 import List.Extra as List
@@ -70,6 +70,7 @@ type Msg
     | ChangePosterUrl String
     | ClickedPlayerControl Cast.PlayerAction
     | ProgressClicked Float
+    | OnTimeRangeInput Float
     | RunCmd (Cmd Msg)
     | SetProposedMedia ProposedMedia
     | MouseoverProgress MouseoverEvent
@@ -688,6 +689,14 @@ playerSubtitlesHtml model =
                 ]
                 (CheckedSubtitleTrack trackId)
 
+        listGroup items =
+            ul
+                [ class "list-group"
+                , class "list-group-flush"
+                ]
+            <|
+                List.map (li [ class "list-group-item" ]) items
+
         --Checkbox.advancedCheckbox
         --    (Maybe.Extra.values
         --        [ Just <| Checkbox.id <| String.fromInt trackId
@@ -700,70 +709,65 @@ playerSubtitlesHtml model =
         --<|
         --    Checkbox.label [] label
     in
-    List.indexedMap
-        (\index s ->
-            let
-                trackId =
-                    s.raw.trackId
+    List.singleton <|
+        listGroup <|
+            List.indexedMap
+                (\index s ->
+                    let
+                        trackId =
+                            s.raw.trackId
 
-                name =
-                    Maybe.withDefault "" s.raw.name
+                        name =
+                            Maybe.withDefault "" s.raw.name
 
-                colGroup options =
-                    Form.col (Col.attrs [ Html.Attributes.class "form-group" ] :: options)
+                        colGroup options =
+                            Form.col (Col.attrs [ Html.Attributes.class "form-group" ] :: options)
 
-                col =
-                    Form.col
-            in
-            Form.row [ Grid.attrs [ class "form-row" ] ]
-                [ col
-                    [ Col.xsAuto
-                    , Col.attrs
-                        [ Bootstrap.Utilities.Flex.alignSelfCenter
+                        col =
+                            div
+                    in
+                    [ div [ class "form-row" ]
+                        [ col
+                            [ class "col-auto"
+                            , Bootstrap.Utilities.Flex.alignSelfCenter
 
-                        -- Prevent the checkbox from taking up more space than it should horizontally.
-                        --Html.Attributes.style "width" "0"
+                            -- Prevent the checkbox from taking up more space than it should horizontally.
+                            --Html.Attributes.style "width" "0"
+                            ]
+                            [ checkbox (Set.member trackId model.activeTrackIds) trackId name ]
+                        , col [ class "col-sm-auto", class "form-group" ]
+                            [ Input.text
+                                [ Input.value <| name
+                                , Input.placeholder "name"
+                                ]
+                            ]
+                        , col [ class "col-sm-auto", class "form-group" ]
+                            [ Input.text
+                                [ Input.value s.raw.language
+                                , Input.placeholder "language"
+                                ]
+                            ]
+                        , col [ class "col-auto", class "form-group" ]
+                            [ Button.button
+                                [ Button.secondary
+                                , Button.light
+                                , Button.onClick <| TrashSubtitleTrack index
+                                ]
+                              <|
+                                iconAndTextExtraAttrs [ "trash" ] [] "Remove"
+                            ]
+                        , col [ class "col-12", class "form-group" ]
+                            [ Textarea.textarea
+                                ([ Textarea.value s.raw.trackContentId
+                                 , Textarea.onInput <| ChangeSubtitlesUrl index
+                                 ]
+                                    ++ urlTextareaAttrsOptions
+                                )
+                            ]
                         ]
                     ]
-                    [ checkbox (Set.member trackId model.activeTrackIds) trackId name ]
-                , colGroup [ Col.smAuto ]
-                    [ Input.text
-                        [ Input.value <| name
-                        , Input.placeholder "name"
-                        ]
-                    ]
-                , colGroup [ Col.smAuto ]
-                    [ Input.text
-                        [ Input.value s.raw.language
-                        , Input.placeholder "language"
-                        ]
-                    ]
-                , colGroup
-                    [ Col.xsAuto
-                    , Col.attrs
-                        [--Bootstrap.Utilities.Flex.alignSelfCenter
-                         --, Html.Attributes.style "margin-left" "15"
-                        ]
-                    ]
-                    [ Button.button
-                        [ Button.secondary
-                        , Button.light
-                        , Button.onClick <| TrashSubtitleTrack index
-                        ]
-                      <|
-                        iconAndTextExtraAttrs [ "trash" ] [] "Remove"
-                    ]
-                , colGroup [ Col.xs12 ]
-                    [ Textarea.textarea
-                        ([ Textarea.value s.raw.trackContentId
-                         , Textarea.onInput <| ChangeSubtitlesUrl index
-                         ]
-                            ++ urlTextareaAttrsOptions
-                        )
-                    ]
-                ]
-        )
-        model.proposedMedia.subtitles
+                )
+                model.proposedMedia.subtitles
 
 
 urlTextareaAttrsOptions =
@@ -906,8 +910,8 @@ progress model =
         maybeDuration =
             andThen .duration maybeMedia
 
-        elem : Cast.SessionMedia -> Float -> Html Msg
-        elem media duration =
+        elemProgressBar : Cast.SessionMedia -> Float -> Html Msg
+        elemProgressBar media duration =
             -- TODO: Use a Bootstrap range input, with ticks for regular intervals of the media.
             div
                 [ class "progress"
@@ -931,6 +935,24 @@ progress model =
                             ]
                             []
                     ]
+
+        elemRangeInput media duration =
+            input
+                [ type_ "range"
+                , class "form-control-range"
+                , Html.Attributes.max <| String.fromFloat duration
+                , step "1"
+                , Html.Events.onInput <|
+                    String.toFloat
+                        >> Maybe.map OnTimeRangeInput
+                        >> Maybe.withDefault Noop
+                , value <| String.fromFloat media.currentTime
+                ]
+                []
+
+        elem : Cast.SessionMedia -> Float -> Html Msg
+        elem =
+            elemRangeInput
 
         card media duration =
             Card.config []
@@ -984,15 +1006,15 @@ traceDecoder decoder =
             )
 
 
-decodeProgressClick : Decoder Msg
+decodeProgressClick : JD.Decoder Msg
 decodeProgressClick =
     let
         f x w =
             ProgressClicked <| x / toFloat w
     in
     JD.map2 f
-        (field "offsetX" JD.float)
-        (at [ "currentTarget", "clientWidth" ] JD.int)
+        (JD.field "offsetX" JD.float)
+        (JD.at [ "currentTarget", "clientWidth" ] JD.int)
 
 
 decodeMouseoverEvent : JD.Decoder MouseoverEvent
@@ -1000,7 +1022,7 @@ decodeMouseoverEvent =
     traceDecoder <|
         JD.map
             MouseoverEvent
-            (field "offsetX" float)
+            (JD.field "offsetX" JD.float)
 
 
 playerCard : Model -> Html Msg
@@ -1213,13 +1235,22 @@ mainUpdate msg model =
 
         ProgressClicked x ->
             ( model
-            , case model.context |> Maybe.andThen .session |> Maybe.andThen .media |> Maybe.andThen .duration of
+            , case
+                model.context
+                    |> Maybe.andThen .session
+                    |> Maybe.andThen .media
+                    |> Maybe.andThen .duration
+              of
                 Just d ->
                     Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek <| x * d
 
                 Nothing ->
                     Cmd.none
             )
+
+        -- We could do the seek only on change, and pause and update the time on input.
+        OnTimeRangeInput value ->
+            ( model, Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek value )
 
         RunCmd cmd ->
             ( model, cmd )
@@ -1304,7 +1335,7 @@ setOptions _ model =
             { defaultOptions
                 | resumeSavedSession = True
                 , receiverApplicationId = Just "911A4C88"
-                , autoJoinPolicy = Cast.originScoped
+                , autoJoinPolicy = Cast.pageScoped
             }
         )
 
