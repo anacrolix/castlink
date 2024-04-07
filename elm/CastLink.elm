@@ -377,17 +377,24 @@ parseQuerySpec query =
                     , language = track.language
                     }
 
-        --errors =
-        --    Tuple.first newStyleSubtitles
+        -- Chromecast seems to barf on loading more than about 50 tracks at once. Old versions of
+        -- webtorrent will serve up all SRTs in an entire torrent, which has been 342 in once
+        -- instance. Loading this into Chromecast gives "invalid_parameter".
+        limitTracks proposedMedia =
+            { proposedMedia | subtitles = List.take 50 proposedMedia.subtitles }
+
+        media =
+            Cast.Media
+                (first_ "content")
+                (first_ "title")
+                (first_ "subtitle")
+                (first_ "poster")
+                (addTrackIds <| oldStyleSubtitles ++ newStyleSubtitles)
     in
     ( errors
-    , Cast.Media
-        (first_ "content")
-        (first_ "title")
-        (first_ "subtitle")
-        (first_ "poster")
-        (addTrackIds <| oldStyleSubtitles ++ newStyleSubtitles)
+    , media
         |> proposedMediaFromCastMedia
+        |> limitTracks
     )
 
 
