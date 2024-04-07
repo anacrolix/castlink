@@ -702,11 +702,11 @@ mediaCard model =
                             , urlTextareaAttrsOptions
                             ]
                     ]
-                , Form.group []
+                , div []
                     ([ div
                         -- This ensures there's a similar space between the header for the subtitles
                         -- label, and the individual rows of subtitles.
-                        [ class "form-group" ]
+                        []
                         [ Form.label [] [ text "Subtitles URL" ] ]
                      ]
                         ++ playerSubtitlesHtml model
