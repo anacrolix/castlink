@@ -22,7 +22,9 @@ import Bootstrap.Utilities.Flex
 import Browser exposing (..)
 import Browser.Navigation
 import Cast exposing (..)
+import Dict exposing (Dict)
 import ElmEscapeHtml
+import Filesize
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -81,6 +83,17 @@ type Msg
     | UnlockPlayerLoadingButton
     | TrashSubtitleTrack Int
     | ChangeSubtitlesUrl Int String
+    | GotSubtitlesSize SubtitleUrlString (Result String Int)
+
+
+type alias SubtitleUrlString =
+    String
+
+
+type SubtitlesSize
+    = NotRequested
+    | Requesting
+    | Size Int
 
 
 type alias ProposedSubtitles =
@@ -110,6 +123,7 @@ type alias Model =
     , navKey : Browser.Navigation.Key
     , activeTrackIds : Set Int
     , errors : List JD.Error
+    , subtitlesSizes : Dict String (Maybe (Result String Int))
     }
 
 
@@ -136,10 +150,90 @@ init flags url key =
       , activeTrackIds = Set.empty
       , lockLoadingButton = False
       , errors = []
+      , subtitlesSizes = Dict.empty
       }
         |> updateUrl url
     , navbarCmd
     )
+
+
+proposedSubtitleUrls : Model -> List String
+proposedSubtitleUrls model =
+    model.proposedMedia.subtitles |> List.map .raw |> List.map .trackContentId
+
+
+unrequestedSubtitleUrls : Model -> List String
+unrequestedSubtitleUrls model =
+    let
+        hasRequest url =
+            Dict.member url <| model.subtitlesSizes
+    in
+    proposedSubtitleUrls model |> List.filterNot hasRequest
+
+
+mapResponseBody : (a -> b) -> Http.Response a -> Http.Response b
+mapResponseBody f resp =
+    case resp of
+        Http.BadStatus_ metadata body ->
+            Http.BadStatus_ metadata <| f body
+
+        Http.GoodStatus_ metadata body ->
+            Http.GoodStatus_ metadata <| f body
+
+        Http.NetworkError_ ->
+            Http.NetworkError_
+
+        Http.BadUrl_ url ->
+            Http.BadUrl_ url
+
+        Http.Timeout_ ->
+            Http.Timeout_
+
+
+expectHeadResponse : (Result x a -> msg) -> (Http.Response () -> Result x a) -> Http.Expect msg
+expectHeadResponse toMsg decoder =
+    Http.expectBytesResponse toMsg <| mapResponseBody (always ()) >> decoder
+
+
+getSubtitlesSize : String -> Cmd Msg
+getSubtitlesSize url =
+    let
+        decoder response =
+            case response of
+                Http.GoodStatus_ metadata () ->
+                    metadata.headers
+                        --|> Debug.log "subtitles size response headers"
+                        |> Dict.get "content-length"
+                        |> Result.fromMaybe "missing Content-Length"
+                        |> Result.andThen (String.toInt >> Result.fromMaybe "bad Content-Length")
+
+                _ ->
+                    Err "response error"
+
+        toMsg =
+            GotSubtitlesSize url
+
+        expect =
+            expectHeadResponse toMsg decoder
+    in
+    Http.get
+        { url = url
+        , expect = expect
+        }
+
+
+requestSubtitlesSizes : ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+requestSubtitlesSizes ( model, cmd ) =
+    let
+        newRequests =
+            unrequestedSubtitleUrls model |> List.map (\url -> ( url, getSubtitlesSize url ))
+
+        addRequest ( url, reqCmd ) ( model_, cmd_ ) =
+            ( { model_ | subtitlesSizes = Dict.insert url Nothing model_.subtitlesSizes }
+            , Cmd.batch [ reqCmd, cmd_ ]
+            )
+    in
+    List.foldr addRequest ( model, cmd ) newRequests
 
 
 updateUrl : Url.Url -> Model -> Model
@@ -483,11 +577,6 @@ sessionCard model =
         |> Card.view
 
 
-relatedButtons : List (Html Msg) -> List (Html Msg)
-relatedButtons =
-    List.intersperse (text "")
-
-
 loadedMedia : Maybe Cast.Context -> Maybe Cast.Media
 loadedMedia context =
     context
@@ -641,14 +730,6 @@ mediaCard model =
         |> Card.view
 
 
-justWhen cond =
-    if cond then
-        Just
-
-    else
-        always Nothing
-
-
 formCheckboxWithoutLabel ariaLabel_ checked indeterminate id attrs checkMsg =
     Html.div
         [ class "form-group"
@@ -697,17 +778,22 @@ playerSubtitlesHtml model =
             <|
                 List.map (li [ class "list-group-item" ]) items
 
-        --Checkbox.advancedCheckbox
-        --    (Maybe.Extra.values
-        --        [ Just <| Checkbox.id <| String.fromInt trackId
-        --        , Just <| Checkbox.checked checked
-        --        , Just <| Checkbox.onCheck <| CheckedSubtitleTrack trackId
-        --        , Just <| Checkbox.disabled indeterminate
-        --        , justWhen indeterminate Checkbox.indeterminate
-        --        ]
-        --    )
-        --<|
-        --    Checkbox.label [] label
+        sizeText url =
+            Dict.get url model.subtitlesSizes
+                |> (\value ->
+                        case value of
+                            Nothing ->
+                                "not requested"
+
+                            Just Nothing ->
+                                "requested"
+
+                            Just (Just (Ok size)) ->
+                                Filesize.format size
+
+                            Just (Just (Err err)) ->
+                                err
+                   )
     in
     List.singleton <|
         listGroup <|
@@ -720,9 +806,6 @@ playerSubtitlesHtml model =
                         name =
                             Maybe.withDefault "" s.raw.name
 
-                        colGroup options =
-                            Form.col (Col.attrs [ Html.Attributes.class "form-group" ] :: options)
-
                         col =
                             div
                     in
@@ -730,22 +813,17 @@ playerSubtitlesHtml model =
                         [ col
                             [ class "col-auto"
                             , Bootstrap.Utilities.Flex.alignSelfCenter
-
-                            -- Prevent the checkbox from taking up more space than it should horizontally.
-                            --Html.Attributes.style "width" "0"
                             ]
                             [ checkbox (Set.member trackId model.activeTrackIds) trackId name ]
-                        , col [ class "col-sm-auto", class "form-group" ]
-                            [ Input.text
-                                [ Input.value <| name
-                                , Input.placeholder "name"
+                        , col
+                            [ class "col-auto", class "form-group", style "display" "flex" ]
+                            [ small
+                                [ class "form-text"
+                                , class "text-muted"
+                                , style "align-self" "center"
+                                , style "margin-top" "0"
                                 ]
-                            ]
-                        , col [ class "col-sm-auto", class "form-group" ]
-                            [ Input.text
-                                [ Input.value s.raw.language
-                                , Input.placeholder "language"
-                                ]
+                                [ text <| sizeText s.raw.trackContentId ]
                             ]
                         , col [ class "col-auto", class "form-group" ]
                             [ Button.button
@@ -756,13 +834,27 @@ playerSubtitlesHtml model =
                               <|
                                 iconAndTextExtraAttrs [ "trash" ] [] "Remove"
                             ]
+                        , col [ class "col-md-9", class "form-group" ]
+                            [ Input.text
+                                [ Input.value <| name
+                                , Input.placeholder "Name"
+                                ]
+                            ]
+                        , col [ class "col-md-3 d-none d-md-block", class "form-group" ]
+                            [ Input.text
+                                [ Input.value s.raw.language
+                                , Input.placeholder "Language"
+                                , Input.attrs [ Html.Attributes.size 10 ]
+                                ]
+                            ]
                         , col [ class "col-12", class "form-group" ]
-                            [ Textarea.textarea
-                                ([ Textarea.value s.raw.trackContentId
-                                 , Textarea.onInput <| ChangeSubtitlesUrl index
-                                 ]
-                                    ++ urlTextareaAttrsOptions
-                                )
+                            [ Textarea.textarea <|
+                                List.concat
+                                    [ [ Textarea.value s.raw.trackContentId
+                                      , Textarea.onInput <| ChangeSubtitlesUrl index
+                                      ]
+                                    , urlTextareaAttrsOptions
+                                    ]
                             ]
                         ]
                     ]
@@ -772,7 +864,7 @@ playerSubtitlesHtml model =
 
 urlTextareaAttrsOptions =
     [ Textarea.attrs
-        [ Html.Attributes.placeholder "url"
+        [ Html.Attributes.placeholder "URL"
         , Html.Attributes.class "text-monospace"
         , Html.Attributes.style "word-break" "break-all"
 
@@ -1148,160 +1240,170 @@ mainUpdate msg model =
         updateProposedMedia : (ProposedMedia -> ProposedMedia) -> ( Model, Cmd Msg )
         updateProposedMedia mediaUpdater =
             ( { model | proposedMedia = mediaUpdater model.proposedMedia }, Cmd.none )
+
+        handleMsg =
+            case msg of
+                ApiAvailability api ->
+                    ( { model | api = api }, Cmd.none )
+
+                CastContext jsContext ->
+                    let
+                        elmContext =
+                            Cast.fromJsContext jsContext
+
+                        newModel =
+                            { model
+                                | context = Just elmContext
+                                , loadingMedia =
+                                    model.loadingMedia
+                                        -- Unset when a media session appears.
+                                        && (elmContext.session |> Maybe.andThen .media |> Maybe.Extra.isNothing)
+                            }
+                    in
+                    ( { newModel
+                        | activeTrackIds =
+                            -- If the proposed media matches what is loaded, clobber the local with what's
+                            -- active on the receiver.
+                            if proposedMediaMatchesLoaded newModel then
+                                activeTrackIdsFromContext elmContext
+                                    |> Maybe.withDefault []
+                                    |> Set.fromList
+
+                            else
+                                newModel.activeTrackIds
+
+                        --, activeTrackIds = activeTrackIdsFromContext context |> Maybe.withDefault [] |> Set.fromList
+                      }
+                    , Cmd.none
+                    )
+
+                RequestSession ->
+                    ( model, Cast.requestSession () )
+
+                UrlChange loc ->
+                    ( updateUrl loc model, Cmd.none )
+
+                Navigate request ->
+                    case request of
+                        Internal url ->
+                            ( model, Browser.Navigation.replaceUrl model.navKey <| Url.toString url )
+
+                        External s ->
+                            ( model, Browser.Navigation.load s )
+
+                NavbarMsg state ->
+                    ( { model | navbarState = state }, Cmd.none )
+
+                LoadMedia ->
+                    ( { model | loadingMedia = True }
+                    , Cmd.batch
+                        [ Cast.loadMedia <|
+                            { media = castMediaFromProposedMedia model.proposedMedia
+                            , activeTrackIds = Set.toList model.activeTrackIds
+                            }
+                        , Process.sleep 3000 |> Task.perform (always UnlockPlayerLoadingButton)
+                        ]
+                    )
+
+                ChangeTitle s ->
+                    updateProposedMedia <| \pm -> { pm | title = s }
+
+                ChangeSubtitle s ->
+                    updateProposedMedia <| \pm -> { pm | subtitle = s }
+
+                ChangeContentUrl s ->
+                    updateProposedMedia <| \pm -> { pm | url = s }
+
+                ChangePosterUrl s ->
+                    updateProposedMedia <| \pm -> { pm | poster = s }
+
+                SetProposedMedia pm ->
+                    updateProposedMedia <| always pm
+
+                Noop ->
+                    ( model, Cmd.none )
+
+                ClickedPlayerControl action ->
+                    ( model, Cast.controlPlayer <| Cast.toJsPlayerAction action )
+
+                ProgressClicked x ->
+                    ( model
+                    , case
+                        model.context
+                            |> Maybe.andThen .session
+                            |> Maybe.andThen .media
+                            |> Maybe.andThen .duration
+                      of
+                        Just d ->
+                            Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek <| x * d
+
+                        Nothing ->
+                            Cmd.none
+                    )
+
+                -- We could do the seek only on change, and pause and update the time on input.
+                OnTimeRangeInput value ->
+                    ( model, Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek value )
+
+                RunCmd cmd ->
+                    ( model, cmd )
+
+                MouseoverProgress e ->
+                    ( { model | progressHover = Just e }, Cmd.none )
+
+                MediaLoaded _ ->
+                    ( { model | loadingMedia = False }, Cmd.none )
+
+                SetPage page ->
+                    ( { model | page = page }, Cmd.none )
+
+                CheckedSubtitleTrack id checked ->
+                    let
+                        f =
+                            if checked then
+                                Set.insert
+
+                            else
+                                Set.remove
+
+                        newActiveTrackIds =
+                            f id model.activeTrackIds
+                    in
+                    ( { model
+                        | activeTrackIds = newActiveTrackIds
+                      }
+                    , Cast.editTracks <| Set.toList newActiveTrackIds
+                    )
+
+                UnlockPlayerLoadingButton ->
+                    ( { model | lockLoadingButton = False }, Cmd.none )
+
+                TrashSubtitleTrack index ->
+                    let
+                        proposedMedia =
+                            model.proposedMedia
+                    in
+                    ( { model
+                        | proposedMedia =
+                            { proposedMedia
+                                | subtitles =
+                                    List.removeAt index proposedMedia.subtitles
+                            }
+                      }
+                    , Cmd.none
+                    )
+
+                ChangeSubtitlesUrl index url ->
+                    updateProposedMedia (updateSubtitlesIndex index (updateRawSubtitles <| \s -> { s | trackContentId = url }))
+
+                GotSubtitlesSize url result ->
+                    ( { model
+                        | subtitlesSizes = Dict.insert url (Just result) model.subtitlesSizes
+                      }
+                    , Cmd.none
+                    )
     in
-    case msg of
-        ApiAvailability api ->
-            ( { model | api = api }, Cmd.none )
-
-        CastContext jsContext ->
-            let
-                elmContext =
-                    Cast.fromJsContext jsContext
-
-                newModel =
-                    { model
-                        | context = Just elmContext
-                        , loadingMedia =
-                            model.loadingMedia
-                                -- Unset when a media session appears.
-                                && (elmContext.session |> Maybe.andThen .media |> Maybe.Extra.isNothing)
-                    }
-            in
-            ( { newModel
-                | activeTrackIds =
-                    -- If the proposed media matches what is loaded, clobber the local with what's
-                    -- active on the receiver.
-                    if proposedMediaMatchesLoaded newModel then
-                        activeTrackIdsFromContext elmContext
-                            |> Maybe.withDefault []
-                            |> Set.fromList
-
-                    else
-                        newModel.activeTrackIds
-
-                --, activeTrackIds = activeTrackIdsFromContext context |> Maybe.withDefault [] |> Set.fromList
-              }
-            , Cmd.none
-            )
-
-        RequestSession ->
-            ( model, Cast.requestSession () )
-
-        UrlChange loc ->
-            ( updateUrl loc model, Cmd.none )
-
-        Navigate request ->
-            case request of
-                Internal url ->
-                    ( model, Browser.Navigation.replaceUrl model.navKey <| Url.toString url )
-
-                External s ->
-                    ( model, Browser.Navigation.load s )
-
-        NavbarMsg state ->
-            ( { model | navbarState = state }, Cmd.none )
-
-        LoadMedia ->
-            ( { model | loadingMedia = True }
-            , Cmd.batch
-                [ Cast.loadMedia <|
-                    { media = castMediaFromProposedMedia model.proposedMedia
-                    , activeTrackIds = Set.toList model.activeTrackIds
-                    }
-                , Process.sleep 3000 |> Task.perform (always UnlockPlayerLoadingButton)
-                ]
-            )
-
-        ChangeTitle s ->
-            updateProposedMedia <| \pm -> { pm | title = s }
-
-        ChangeSubtitle s ->
-            updateProposedMedia <| \pm -> { pm | subtitle = s }
-
-        ChangeContentUrl s ->
-            updateProposedMedia <| \pm -> { pm | url = s }
-
-        ChangePosterUrl s ->
-            updateProposedMedia <| \pm -> { pm | poster = s }
-
-        SetProposedMedia pm ->
-            updateProposedMedia <| always pm
-
-        Noop ->
-            ( model, Cmd.none )
-
-        ClickedPlayerControl action ->
-            ( model, Cast.controlPlayer <| Cast.toJsPlayerAction action )
-
-        ProgressClicked x ->
-            ( model
-            , case
-                model.context
-                    |> Maybe.andThen .session
-                    |> Maybe.andThen .media
-                    |> Maybe.andThen .duration
-              of
-                Just d ->
-                    Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek <| x * d
-
-                Nothing ->
-                    Cmd.none
-            )
-
-        -- We could do the seek only on change, and pause and update the time on input.
-        OnTimeRangeInput value ->
-            ( model, Cast.controlPlayer <| Cast.toJsPlayerAction <| Cast.Seek value )
-
-        RunCmd cmd ->
-            ( model, cmd )
-
-        MouseoverProgress e ->
-            ( { model | progressHover = Just e }, Cmd.none )
-
-        MediaLoaded _ ->
-            ( { model | loadingMedia = False }, Cmd.none )
-
-        SetPage page ->
-            ( { model | page = page }, Cmd.none )
-
-        CheckedSubtitleTrack id checked ->
-            let
-                f =
-                    if checked then
-                        Set.insert
-
-                    else
-                        Set.remove
-
-                newActiveTrackIds =
-                    f id model.activeTrackIds
-            in
-            ( { model
-                | activeTrackIds = newActiveTrackIds
-              }
-            , Cast.editTracks <| Set.toList newActiveTrackIds
-            )
-
-        UnlockPlayerLoadingButton ->
-            ( { model | lockLoadingButton = False }, Cmd.none )
-
-        TrashSubtitleTrack index ->
-            let
-                proposedMedia =
-                    model.proposedMedia
-            in
-            ( { model
-                | proposedMedia =
-                    { proposedMedia
-                        | subtitles =
-                            List.removeAt index proposedMedia.subtitles
-                    }
-              }
-            , Cmd.none
-            )
-
-        ChangeSubtitlesUrl index url ->
-            updateProposedMedia (updateSubtitlesIndex index (updateRawSubtitles <| \s -> { s | trackContentId = url }))
+    handleMsg |> requestSubtitlesSizes
 
 
 
