@@ -1444,7 +1444,7 @@ setOptions _ model =
             { defaultOptions
                 | resumeSavedSession = True
                 , receiverApplicationId = Just "911A4C88"
-                , autoJoinPolicy = Cast.pageScoped
+                , autoJoinPolicy = Cast.tabAndOriginScoped
             }
         )
 
