@@ -239,8 +239,14 @@ requestSubtitlesSizes ( model, cmd ) =
 updateUrl : Url.Url -> Model -> Model
 updateUrl url model =
     let
-        ( errors, proposedMedia ) =
+        ( errors, proposedMedia, subtitlesSizes ) =
             locationMediaSpec url
+
+        newSubtitlesSizesAsDict =
+            subtitlesSizes |> List.map (Tuple.mapSecond <| Just << Ok) |> Dict.fromList
+
+        mergedSubtitlesSizes =
+            Dict.union newSubtitlesSizesAsDict model.subtitlesSizes
     in
     { model
         | proposedMedia =
@@ -256,14 +262,15 @@ updateUrl url model =
                         emptyProposedMedia
         , page = internalPageForUrl url
         , errors = errors
+        , subtitlesSizes = mergedSubtitlesSizes
     }
 
 
-locationMediaSpec : Url.Url -> ( List JD.Error, Maybe ProposedMedia )
+locationMediaSpec : Url.Url -> ( List JD.Error, Maybe ProposedMedia, List ( String, Int ) )
 locationMediaSpec loc =
     loc.fragment
-        |> Maybe.map (parseQuerySpec >> Tuple.mapSecond Just)
-        |> Maybe.withDefault ( [], Nothing )
+        |> Maybe.map (parseQuerySpec >> (\( errors, pm, sizes ) -> ( errors, Just pm, sizes )))
+        |> Maybe.withDefault ( [], Nothing, [] )
 
 
 internalPageForUrl : Url.Url -> Page
@@ -316,7 +323,7 @@ type alias SubtitlesWithoutTrackId =
     }
 
 
-parseQuerySpec : String -> ( List JD.Error, ProposedMedia )
+parseQuerySpec : String -> ( List JD.Error, ProposedMedia, List ( String, Int ) )
 parseQuerySpec query =
     let
         specQuery =
@@ -332,16 +339,18 @@ parseQuerySpec query =
             specQuery |> Query.all key |> justList |> List.map decode
 
         trackDecoder =
-            JD.map3
-                (\src lang name ->
+            JD.map4
+                (\src lang name size ->
                     { language = withDefault "" lang
                     , trackContentId = src
                     , name = name
+                    , size = size
                     }
                 )
                 (JD.field "src" JD.string)
                 (JD.maybe <| JD.field "lang" JD.string)
                 (JD.maybe <| JD.field "name" JD.string)
+                (JD.maybe <| JD.field "size" JD.int)
 
         oldStyleSubtitles =
             all_ "subtitles"
@@ -350,10 +359,10 @@ parseQuerySpec query =
                         { trackContentId = id
                         , language = defaultSubtitlesLanguage
                         , name = Nothing
+                        , size = Nothing
                         }
                     )
 
-        --newStyleSubtitles : ( List JD.Error, List Cast.Subtitles )
         ( errors, newStyleSubtitles ) =
             all_ "track"
                 |> List.map (JD.decodeString trackDecoder)
@@ -383,6 +392,21 @@ parseQuerySpec query =
         limitTracks proposedMedia =
             { proposedMedia | subtitles = List.take 50 proposedMedia.subtitles }
 
+        combinedSubtitles =
+            oldStyleSubtitles ++ newStyleSubtitles
+
+        subtitlesSizes =
+            combinedSubtitles
+                |> List.filterMap
+                    (\s ->
+                        case s.size of
+                            Just size ->
+                                Just ( s.trackContentId, size )
+
+                            _ ->
+                                Nothing
+                    )
+
         media =
             Cast.Media
                 (first_ "content")
@@ -395,6 +419,7 @@ parseQuerySpec query =
     , media
         |> proposedMediaFromCastMedia
         |> limitTracks
+    , subtitlesSizes
     )
 
 
@@ -813,8 +838,16 @@ playerSubtitlesHtml model =
                         name =
                             Maybe.withDefault "" s.raw.name
 
-                        col =
-                            div
+                        col attrs html =
+                            div (attrs ++ [ style "display" "flex" ])
+                                [ div
+                                    [ style "align-self" "center"
+                                    , style "width" "100%"
+
+                                    --, style "height" "100%"
+                                    ]
+                                    html
+                                ]
                     in
                     [ div [ class "form-row" ]
                         [ col
@@ -837,17 +870,23 @@ playerSubtitlesHtml model =
                                 [ Button.secondary
                                 , Button.light
                                 , Button.onClick <| TrashSubtitleTrack index
+                                , Button.small
                                 ]
                               <|
                                 iconAndTextExtraAttrs [ "trash" ] [] "Remove"
                             ]
-                        , col [ class "col-md-9", class "form-group" ]
+                        , col
+                            [ class "flex-md-grow-1"
+                            , class "form-group"
+                            , class "col-md-auto"
+                            , class "col-12"
+                            ]
                             [ Input.text
                                 [ Input.value <| name
                                 , Input.placeholder "Name"
                                 ]
                             ]
-                        , col [ class "col-md-3 d-none d-md-block", class "form-group" ]
+                        , col [ class "col-auto d-none d-md-block", class "form-group" ]
                             [ Input.text
                                 [ Input.value s.raw.language
                                 , Input.placeholder "Language"
