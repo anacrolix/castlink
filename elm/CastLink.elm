@@ -592,8 +592,12 @@ sessionCard model =
 
                                             NoDevicesAvailable ->
                                                 Alert.simpleDanger [] <|
-                                                    [ strong [] [ text "No receiver devices available." ]
-                                                    , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                    [ p []
+                                                        [ strong [] [ text "No receiver devices available." ]
+                                                        , text " There appears to be no Chromecasts on your network. They may be switched off, or on a different network."
+                                                        ]
+                                                    , p [] [ text "Some browsers (like Brave) only look for devices once the cast dialog is opened. Searching opens it from here." ]
+                                                    , Bootstrap.button Primary (Just "search") [ onClick RequestSession ] "Search for devices"
                                                     ]
 
                                     Nothing ->
