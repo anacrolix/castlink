@@ -1,4 +1,4 @@
-MAKE_CASTLINK = elm make Castlink.elm --output $@
+MAKE_CASTLINK = elm make CastLink.elm --output $@
 ELM_MAKE_ARGS = --optimize
 ELM_JS = ../docs/elm.js
 ELM_MIN_JS = ../docs/elm.min.js
